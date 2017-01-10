@@ -26,17 +26,15 @@ from stevedore import named
 from twisted.internet.defer import inlineCallbacks, returnValue
 from autobahn.twisted.util import sleep
 
+from oslo_log import log as logging
+LOG = logging.getLogger(__name__)
 
 class Test(Module.Module):
 
 
     def __init__(self, session):
         
-        super(Test, self).__init__()
-        
-	self.name = "Test"
-	self.session = session
-        print "Starting module " + self.name + "..."
+        super(Test, self).__init__("Test", session)
 
       
     def test_function(self):
@@ -44,7 +42,7 @@ class Test(Module.Module):
 	s = random.uniform(0.5, 1.5)
 	yield sleep(s)
 	result = "DEVICE test result: TEST!"
-	print result
+	LOG.info(result)
 	returnValue(result)
 
       

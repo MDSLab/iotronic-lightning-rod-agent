@@ -1,3 +1,0 @@
-[s4t.modules]
-utility = lightningrod.modules.utility:Utility
-

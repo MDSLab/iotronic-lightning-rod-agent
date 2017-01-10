@@ -24,6 +24,9 @@ __author__="MDSLAB Team"
 
 import abc
 
+from oslo_log import log as logging
+LOG = logging.getLogger(__name__)
+
 
 class Module(object):
     """
@@ -33,13 +36,18 @@ class Module(object):
     __metaclass__ = abc.ABCMeta
     
  
-    def __init__(self):
+    def __init__(self, name, session):
         '''
         Costructor
         @param    probe    probe object 
         '''
        
-        self.name=""
+        self.name = name
+	self.session = session
+
+	LOG.info("Loading module " + self.name + "...")
+            
+
 
        
     """

@@ -42,7 +42,7 @@ class PluginManager(Module.Module):
 
       
     def test_plugin(self):
-	LOG.info("test_plugin CALLED...")
+	LOG.info(" - test_plugin CALLED...")
 	
 	name = "plugin_ZERO"
 	
@@ -58,7 +58,7 @@ class PluginManager(Module.Module):
             
             yield task.PluginExec("plugin_ZERO")
             
-            result = "Plugin started!"
+            result = "Plugin "+name+" started!"
             LOG.info(result)
 	    returnValue(result)
 	  

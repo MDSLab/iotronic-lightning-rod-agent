@@ -1,6 +1,9 @@
 CHANGES
 =======
 
+* Delete .directory
+* gitignore updated
+* first version of Plugin Manager Module (with the test plugin plugin_ZERO)
 * modules management added
 * Update README.md
 * Iotronic Lightning-rod first commit

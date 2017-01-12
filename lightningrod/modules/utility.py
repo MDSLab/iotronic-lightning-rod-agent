@@ -1,4 +1,4 @@
-# Copyright 2014 University of Messina (UniMe)
+# Copyright 2016 University of Messina (UniMe)
 #
 # Authors: Nicola Peditto <npeditto@unime.it>, Fabio Verboso <fverboso@unime.it>
 #
@@ -14,11 +14,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-'''
-Created on 18/lug/2014
-
-@authors: Nicola Peditto <npeditto@unime.it>, Fabio Verboso <fverboso@unime.it>
-'''
 
 from lightningrod.modules import Module
 from stevedore import named

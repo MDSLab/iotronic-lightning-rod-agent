@@ -1,4 +1,19 @@
-#!/usr/bin/env python
+# Copyright 2016 University of Messina (UniMe)
+#
+# Authors: Nicola Peditto <npeditto@unime.it>, Fabio Verboso <fverboso@unime.it>
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 
 # Autobahn and Twisted imports
 from autobahn.twisted.wamp import ApplicationSession, ApplicationRunner
@@ -83,16 +98,17 @@ def modulesLoader(session):
 	  
 	  meth_list = inspect.getmembers(mod, predicate=inspect.ismethod)
 	  
+	  
 	  LOG.info("RPC list of "+str(mod.name)+ ":")
 	  
-	  for meth in meth_list[1:]:		#We don't considere the __init__ method
-	     LOG.info( " - " + str(meth) )
-	     session.register(inlineCallbacks(meth[1]), u'board.'+meth[0])
+	  for meth in meth_list:		#We don't considere the __init__ method
+	      
+	     #print meth[0]
+	     if (meth[0] != "__init__"):
+		LOG.info( " - " + str(meth) )
+		session.register(inlineCallbacks(meth[1]), u'board.'+meth[0])
 	     
-	""" 
-	t = threading.Thread(target=listener_q, args=(session,))
-	t.start()
-	"""
+	
             
 
 

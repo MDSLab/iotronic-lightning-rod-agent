@@ -32,6 +32,7 @@ setuptools.setup(
     entry_points={
 	  's4t.modules': [
 	      'utility = lightningrod.modules.utility:Utility',
+	      'plugin = lightningrod.modules.plugin_manager:PluginManager',
 	      
 	  ],
     },    

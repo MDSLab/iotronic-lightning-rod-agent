@@ -18,36 +18,60 @@
 import threading
 import abc
 import os
+from twisted.internet.defer import inlineCallbacks
 
+from oslo_log import log as logging
+LOG = logging.getLogger(__name__)
+
+
+@inlineCallbacks
+def sendNotification(session, msg=None):
+    try: 
+	res = yield session.call(u'register_board') 
+	LOG.info("NOTIFICATION " + str(res)) 
+    except Exception as e: 
+	LOG.warning("NOTIFICATION error: {0}".format(e))  	
+	    
+	    
 
 class Plugin(threading.Thread):
     
     __metaclass__ = abc.ABCMeta
     
-    def __init__(self, name):
+    def __init__(self, name, session):
       
         threading.Thread.__init__(self)
-        
         #self.setDaemon(1)
+        self.setName("Plugin " + str(self.name)) #Set thread name 
         
         self.name = name
-        
-        self.setName("Plugin " + str(self.name)) #Set thread name 
+        self.path = "./lightningrod/plugins/"+self.name+".py"
+        self.status = "None"
+        self.session = session
 
+        self.setStatus("INITED")
+        
+        
         
     def run(self):
         """
-        Metodo run da ridefinire nel file del task
+        Metodo run da ridefinire nel file del plugin
         """
         pass
+      
+      
     
     def Done(self):
-        pass
-            
-    def Status(self):
-        return status
+	self.setStatus("COMPLETED")
+	sendNotification(self.session)
+	self.checkStatus()
+	
+    def checkStatus(self):
+	LOG.debug("Plugin "+self.name+" check status: "+self.status)
+        return self.status
     
     def setStatus(self, status):
-	pass
+	self.status = status
+	LOG.debug("Plugin "+self.name+" changed status: "+self.status)
     
         

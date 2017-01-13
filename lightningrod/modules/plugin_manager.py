@@ -34,36 +34,49 @@ def makeNothing():
 
 
 
+
 class PluginManager(Module.Module):
 
     def __init__(self, session):
+      
+	self.session = session
         
-        super(PluginManager, self).__init__("PluginManager", session)
+        # Module declaration
+        super(PluginManager, self).__init__("PluginManager", self.session)
+       
 
       
     def test_plugin(self):
 	LOG.info(" - test_plugin CALLED...")
 	
 	name = "plugin_ZERO"
-	
-	path_task = "./lightningrod/plugins/"+name+".py"
+	path = "./lightningrod/plugins/"+name+".py"
       
-        if os.path.exists(path_task):
+        if os.path.exists(path):
 	  
-            LOG.info("Plugin PATH: " + path_task)
+            LOG.info("Plugin PATH: " + path)
                         
-            task = imp.load_source("PluginExec", path_task)
-
+            task = imp.load_source("plugin", path)
             LOG.info("Plugin "+name+" imported!")
             
-            yield task.PluginExec("plugin_ZERO")
+           
+            worker = task.Worker(name, self.session)
+            worker.setStatus("STARTED")
+            result = worker.checkStatus()
             
+            yield worker.start()
+            
+            returnValue(result)
+            
+            """
+            yield task.PluginExec("plugin_ZERO", self.session)
             result = "Plugin "+name+" started!"
             LOG.info(result)
 	    returnValue(result)
+	    """
 	  
         else: 
-            LOG.warning("ERROR il file "+path_task+" non esiste!")
+            LOG.warning("ERROR il file "+path+" non esiste!")
 
                 
     def PluginInject(self):

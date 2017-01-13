@@ -30,29 +30,24 @@ from lightningrod.plugins import Plugin
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
-
-def PluginExec(name):
+"""
+def PluginExec(name, session):
     LOG.info("Booting "+name+"...")
     #return "DONE - " + name
-    Worker(name).start()
-    
+    Worker(name, session).start()
+"""    
 
 class Worker(Plugin.Plugin):
     
-    def __init__(self, name):
-        super(Worker, self).__init__(name)
+    def __init__(self, name, session):
+        super(Worker, self).__init__(name, session)
 
 
     def run(self):
+                        
+        self.Done()
         
-        #print "Starting " + self.name
-        LOG.info("PLUGIN ZERO started!")
         
-        #shutil.copy("/home/risultato.txt", "/mnt/hdfs/")
-  
-        # FINE CODICE UTENTE
-        #self.Done()
-
 
         
 

@@ -1,6 +1,8 @@
 CHANGES
 =======
 
+* plugin-manager updated
+* test_plugin RPC updated
 * Delete .directory
 * gitignore updated
 * first version of Plugin Manager Module (with the test plugin plugin_ZERO)

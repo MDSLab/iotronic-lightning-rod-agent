@@ -1,3 +1,6 @@
 *.pyc
 .directory
 *.swp
+*~
+.tox/
+pep8_result.txt

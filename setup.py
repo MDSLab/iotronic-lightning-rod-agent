@@ -27,14 +27,14 @@ except ImportError:
 setuptools.setup(
     setup_requires=['pbr>=1.8'],
     pbr=True,
-    
-    
+
+
     entry_points={
-	  's4t.modules': [
-	      'utility = lightningrod.modules.utility:Utility',
-	      'plugin = lightningrod.modules.plugin_manager:PluginManager',
-	      
-	  ],
-    },    
-    
+        's4t.modules': [
+            'utility = lightningrod.modules.utility:Utility',
+            'plugin = lightningrod.modules.plugin_manager:PluginManager',
+
+        ],
+    },
+
 )

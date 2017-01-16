@@ -24,4 +24,4 @@ from lightningrod.lightningrod import LightningRod
 
 if __name__ == '__main__':
 
-    lr=LightningRod()
+    lr = LightningRod()

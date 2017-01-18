@@ -42,6 +42,9 @@ from config import entry_points_name
 # Logging configuration
 LOG = logging.getLogger(__name__)
 
+CONF = cfg.CONF
+
+# WAMP opts
 wamp_opts = [
     cfg.StrOpt('wamp_ip',
                default='192.168.17.1',
@@ -57,10 +60,19 @@ wamp_opts = [
                help=('realm broker')),
 ]
 
-
-CONF = cfg.CONF
 CONF.register_opts(wamp_opts, 'wamp')
-# print CONF.__dict__
+
+# Device opts
+device_group = cfg.OptGroup(name='device', title='Device options')
+device_opts = [
+
+    cfg.StrOpt('name',
+               default='laptop',
+               help='Device type.'),
+]
+
+CONF.register_group(device_group)
+CONF.register_opts(device_opts, 'device')
 
 
 def modulesLoader(session):
@@ -198,6 +210,7 @@ def LogoLR():
     print ('##############################')
     print ('  Stack4Things Lightning-rod')
     print ('##############################')
+    print ('Info:')
     print (' - See logs in /var/log/s4t-lightning-rod.log')
 
 
@@ -211,6 +224,8 @@ class LightningRod(object):
         logging.setup(CONF, DOMAIN)
 
         LogoLR()
+
+        print("Device: " + CONF.device.name)
 
         w = WampManager()
 

@@ -44,7 +44,7 @@ class Plugin(threading.Thread):
         self.setName("Plugin " + str(self.name))  # Set thread name
 
         self.name = name
-        self.path = "./lightningrod/plugins/" + self.name + ".py"
+        self.path = "./iotronic_lightningrod/plugins/" + self.name + ".py"
         self.status = "None"
         self.session = session
 

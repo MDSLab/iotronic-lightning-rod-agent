@@ -76,7 +76,6 @@ CONF.register_opts(device_opts, 'device')
 
 
 def modulesLoader(session):
-
     '''Modules loader method thorugh stevedore libraries.
 
     '''
@@ -102,22 +101,31 @@ def modulesLoader(session):
             # invoke_args=(session,),
         )
 
+        print('Module list:')
         for ext in modules.extensions:
 
-            mod = ext.plugin(session)
-            # print mod.name
+            # print(ext.name)
 
-            meth_list = inspect.getmembers(mod, predicate=inspect.ismethod)
+            if (ext.name == 'gpio') & (CONF.device.name == 'laptop'):
+                print('- GPIO module disabled for laptop devices')
 
-            LOG.info("RPC list of " + str(mod.name) + ":")
+            else:
+                mod = ext.plugin(session)
 
-            for meth in meth_list:  # We don't considere the __init__ method
+                print('- ' + mod.name)
 
-                # print meth[0]
-                if (meth[0] != "__init__"):
-                    LOG.info(" - " + str(meth))
-                    session.register(inlineCallbacks(
-                        meth[1]), u'board.' + meth[0])
+                # Methods list for each module
+                meth_list = inspect.getmembers(mod, predicate=inspect.ismethod)
+
+                LOG.debug("RPC list of " + str(mod.name) + ":")
+
+                for meth in meth_list:
+
+                    # print meth[0]
+                    if (meth[0] != "__init__"):  # We don't considere the __init__ method
+                        LOG.debug(" - " + str(meth[0]))
+                        session.register(inlineCallbacks(
+                            meth[1]), u'board.' + meth[0])
 
 
 class WampFrontend(ApplicationSession):
@@ -138,7 +146,8 @@ class WampFrontend(ApplicationSession):
 
             # self.register(pinco, u'com.myapp.hello')
             yield modulesLoader(self)
-            LOG.info("Procedures registered!")
+            LOG.info("Procedures registered.")
+            LOG.info("Modules loaded.")
 
         except Exception as e:
             LOG.warning(
@@ -149,7 +158,7 @@ class WampFrontend(ApplicationSession):
 
 
 class WampClientFactory(
-    websocket.WampWebSocketClientFactory, ReconnectingClientFactory):
+        websocket.WampWebSocketClientFactory, ReconnectingClientFactory):
 
     maxDelay = 30
 
@@ -211,7 +220,7 @@ def LogoLR():
     print ('  Stack4Things Lightning-rod')
     print ('##############################')
     print ('Info:')
-    print (' - See logs in /var/log/s4t-lightning-rod.log')
+    print (' - Logs: /var/log/s4t-lightning-rod.log')
 
 
 class LightningRod(object):

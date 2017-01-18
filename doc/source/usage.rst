@@ -2,6 +2,6 @@
 Usage
 ========
 
-To use iotronic-lightning-rod-agent in a project::
+To use iotronic_lightningrod in a project::
 
-    import lightningrod
+    import iotronic_lightningrod

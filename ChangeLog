@@ -2,6 +2,7 @@ CHANGES
 =======
 
 * tox-pep8 tests: passed
+* tox-pep8 tests: passed
 * plugin-manager updated
 * test_plugin RPC updated
 * Delete .directory

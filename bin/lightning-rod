@@ -20,7 +20,7 @@ Iotronic LightningRod Agent
 """
 
 
-from lightningrod.lightningrod import LightningRod
+from iotronic_lightningrod.lightningrod import LightningRod
 
 if __name__ == '__main__':
 

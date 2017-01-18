@@ -15,7 +15,7 @@
 
 
 import imp
-from lightningrod.modules import Module
+from iotronic_lightningrod.modules import Module
 import os
 from twisted.internet.defer import returnValue
 
@@ -40,7 +40,7 @@ class PluginManager(Module.Module):
         LOG.info(" - test_plugin CALLED...")
 
         name = "plugin_ZERO"
-        path = "./lightningrod/plugins/" + name + ".py"
+        path = "./iotronic_lightningrod/plugins/" + name + ".py"
 
         if os.path.exists(path):
 

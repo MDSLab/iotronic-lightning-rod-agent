@@ -31,8 +31,9 @@ setuptools.setup(
 
     entry_points={
         's4t.modules': [
-            'utility = lightningrod.modules.utility:Utility',
-            'plugin = lightningrod.modules.plugin_manager:PluginManager',
+            'utility = iotronic_lightningrod.modules.utility:Utility',
+            'plugin = iotronic_lightningrod.modules.plugin_manager:PluginManager',
+            'gpio = iotronic_lightningrod.modules.gpio_manager:GpioManager',
 
         ],
     },

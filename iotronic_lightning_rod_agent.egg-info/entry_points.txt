@@ -1,4 +1,0 @@
-[s4t.modules]
-plugin = lightningrod.modules.plugin_manager:PluginManager
-utility = lightningrod.modules.utility:Utility
-

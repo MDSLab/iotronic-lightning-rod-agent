@@ -1,5 +1,5 @@
 ============================================
- lightningrod Release Notes
+ iotronic_lightningrod Release Notes
 ============================================
 
 .. toctree::

@@ -15,8 +15,8 @@
 
 
 from autobahn.twisted.util import sleep
-from lightningrod.config import entry_points_name
-from lightningrod.modules import Module
+from iotronic_lightningrod.config import entry_points_name
+from iotronic_lightningrod.modules import Module
 import pkg_resources
 from six import moves
 from stevedore import extension
@@ -82,7 +82,7 @@ class Utility(Module.Module):
         with open(entry_points_name, 'a') as entry_points:
             entry_points.write(
                 new_module +
-                '= lightningrod.modules.' + new_module + ':' + new_class)
+                '= iotronic_lightningrod.modules.' + new_module + ':' + new_class)
 
             # Reload entry_points
             refresh_stevedore('s4t.modules')

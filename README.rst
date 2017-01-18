@@ -1,5 +1,5 @@
 ===============================
-iotronic-lightning-rod-agent
+iotronic_lightningrod
 ===============================
 
 Implementation of the Lightning-rod, the Stack4Things node-side probe
@@ -9,9 +9,9 @@ Please fill here a long description which must be at least 3 lines wrapped on
 Note that this is a hard requirement.
 
 * Free software: Apache license
-* Documentation: http://docs.openstack.org/developer/iotronic-lightning-rod-agent
-* Source: http://git.openstack.org/cgit/iotronic/iotronic-lightning-rod-agent
-* Bugs: http://bugs.launchpad.net/iotronic-lightning-rod-agent
+* Documentation: http://docs.openstack.org/developer/iotronic_lightningrod
+* Source: http://git.openstack.org/cgit/iotronic/iotronic_lightningrod
+* Bugs: http://bugs.launchpad.net/iotronic
 
 Features
 --------

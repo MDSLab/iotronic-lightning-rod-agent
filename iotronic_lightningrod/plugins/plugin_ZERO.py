@@ -13,18 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from lightningrod.plugins import Plugin
+from iotronic_lightningrod.plugins import Plugin
 
 
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
-
-"""
-def PluginExec(name, session):
-    LOG.info("Booting "+name+"...")
-    #return "DONE - " + name
-    Worker(name, session).start()
-"""
 
 
 class Worker(Plugin.Plugin):

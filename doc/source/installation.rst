@@ -4,9 +4,9 @@ Installation
 
 At the command line::
 
-    $ pip install iotronic-lightning-rod-agent
+    $ pip install iotronic_lightningrod
 
 Or, if you have virtualenvwrapper installed::
 
-    $ mkvirtualenv iotronic-lightning-rod-agent
-    $ pip install iotronic-lightning-rod-agent
+    $ mkvirtualenv iotronic_lightningrod
+    $ pip install iotronic_lightningrod

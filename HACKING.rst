@@ -1,4 +1,4 @@
-iotronic-lightning-rod-agent Style Commandments
+iotronic_lightningrod Style Commandments
 ===============================================
 
 Read the OpenStack Style Commandments http://docs.openstack.org/developer/hacking/

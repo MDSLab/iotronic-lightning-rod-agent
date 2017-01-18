@@ -14,24 +14,42 @@
 #    under the License.
 
 
-from autobahn.twisted.util import sleep
-from lightningrod.modules import Module
+from iotronic_lightningrod.modules import Module
 from twisted.internet.defer import returnValue
 
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
 
-class Test(Module.Module):
+def makeNothing():
+    pass
+
+
+class GpioManager(Module.Module):
 
     def __init__(self, session):
 
-        super(Test, self).__init__("Test", session)
+        self.session = session
 
-    def test_function(self):
-        import random
-        s = random.uniform(0.5, 1.5)
-        yield sleep(s)
-        result = "DEVICE test result: TEST!"
+        # Module declaration
+        super(GpioManager, self).__init__("GpioManager", self.session)
+
+        # Enable GPIO
+
+    def EnableGPIO(self):
+        LOG.info(" - EnableGPIO CALLED...")
+        with open('/sys/bus/iio/devices/iio:device0/enable', 'a') as f:
+            yield f.write('1')
+
+        result = "GPIO result: enabled!\n"
+        LOG.info(result)
+        returnValue(result)
+
+    def DisableGPIO(self):
+        LOG.info(" - DisableGPIO CALLED...")
+        with open('/sys/bus/iio/devices/iio:device0/enable', 'a') as f:
+            yield f.write('0')
+
+        result = "GPIO result: disabled!\n"
         LOG.info(result)
         returnValue(result)

@@ -37,7 +37,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'iotronic-lightning-rod-agent'
+project = u'iotronic_lightningrod'
 copyright = u'2016, OpenStack Foundation'
 
 # If true, '()' will be appended to :func: etc. cross-reference text.

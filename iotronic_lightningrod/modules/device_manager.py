@@ -28,10 +28,6 @@ from oslo_config import cfg
 CONF = cfg.CONF
 
 
-def makeNothing():
-    pass
-
-
 class DeviceManager(Module.Module):
     def __init__(self, session):
 

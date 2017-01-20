@@ -14,42 +14,44 @@
 #    under the License.
 
 
+import imp
+from iotronic_lightningrod.config import package_path
 from iotronic_lightningrod.modules import Module
-from twisted.internet.defer import returnValue
+import os
 
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
+
+# OSLO imports
+from oslo_config import cfg
+
+CONF = cfg.CONF
 
 
 def makeNothing():
     pass
 
 
-class GpioManager(Module.Module):
-
+class DeviceManager(Module.Module):
     def __init__(self, session):
 
         self.session = session
 
         # Module declaration
-        super(GpioManager, self).__init__("GpioManager", self.session)
+        super(DeviceManager, self).__init__("DeviceManager", self.session)
 
-        # Enable GPIO
+        device_name = CONF.device.name
 
-    def EnableGPIO(self):
-        LOG.info(" - EnableGPIO CALLED...")
-        with open('/sys/bus/iio/devices/iio:device0/enable', 'a') as f:
-            yield f.write('1')
+        path = package_path + "/devices/" + device_name + ".py"
 
-        result = "GPIO result: enabled!\n"
-        LOG.info(result)
-        returnValue(result)
+        if os.path.exists(path):
+            LOG.debug("Device module path: " + path)
 
-    def DisableGPIO(self):
-        LOG.info(" - DisableGPIO CALLED...")
-        with open('/sys/bus/iio/devices/iio:device0/enable', 'a') as f:
-            yield f.write('0')
+            device_module = imp.load_source("device", path)
 
-        result = "GPIO result: disabled!\n"
-        LOG.info(result)
-        returnValue(result)
+            LOG.info("Device " + device_name + " module imported!")
+
+            device_module.System()
+
+        else:
+            LOG.warning("Device " + device_name + " not supported!")

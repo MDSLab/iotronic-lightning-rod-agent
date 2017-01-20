@@ -24,6 +24,7 @@ import sys
 from twisted.internet.defer import returnValue
 
 from oslo_log import log as logging
+
 LOG = logging.getLogger(__name__)
 
 
@@ -52,9 +53,7 @@ def refresh_stevedore(namespace=None):
 
 
 class Utility(Module.Module):
-
     def __init__(self, session):
-
         super(Utility, self).__init__("Utility", session)
 
     def hello(self, client_name, message):
@@ -62,7 +61,7 @@ class Utility(Module.Module):
         s = random.uniform(0.5, 3.0)
         yield sleep(s)
         result = "Hello by board to Conductor " + client_name + \
-            " that said me " + message + " - Time: " + '%.2f' % s
+                 " that said me " + message + " - Time: " + '%.2f' % s
         # result = yield "Hello by board to Conductor "+client_name+" that said
         # me "+message
         LOG.info("DEVICE hello result: " + str(result))
@@ -75,7 +74,6 @@ class Utility(Module.Module):
         returnValue(c)
 
     def plug_and_play(self, new_module, new_class):
-
         LOG.info("LR modules loaded:\n\t" + new_module)
 
         # Updating entry_points

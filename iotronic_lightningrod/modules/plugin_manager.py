@@ -20,7 +20,10 @@ import os
 from twisted.internet.defer import returnValue
 
 from oslo_log import log as logging
+
 LOG = logging.getLogger(__name__)
+
+from iotronic_lightningrod.config import package_path
 
 
 def makeNothing():
@@ -28,7 +31,6 @@ def makeNothing():
 
 
 class PluginManager(Module.Module):
-
     def __init__(self, session):
 
         self.session = session
@@ -40,7 +42,9 @@ class PluginManager(Module.Module):
         LOG.info(" - test_plugin CALLED...")
 
         name = "plugin_ZERO"
-        path = "./iotronic_lightningrod/plugins/" + name + ".py"
+        LOG.debug("Plugins path: " + package_path)
+
+        path = package_path + "/plugins/" + name + ".py"
 
         if os.path.exists(path):
 

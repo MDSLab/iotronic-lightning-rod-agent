@@ -36,9 +36,6 @@ import sys
 # Iotronic imports
 from config import entry_points_name
 
-
-# LR configuration
-
 # Logging configuration
 LOG = logging.getLogger(__name__)
 
@@ -101,6 +98,7 @@ def modulesLoader(session):
             # invoke_args=(session,),
         )
 
+        LOG.info('Module list:')
         print('Module list:')
         for ext in modules.extensions:
 
@@ -112,12 +110,13 @@ def modulesLoader(session):
             else:
                 mod = ext.plugin(session)
 
+                LOG.info('- ' + mod.name)
                 print('- ' + mod.name)
 
                 # Methods list for each module
                 meth_list = inspect.getmembers(mod, predicate=inspect.ismethod)
 
-                LOG.debug("RPC list of " + str(mod.name) + ":")
+                LOG.debug("- RPC list of " + str(mod.name) + ":")
 
                 for meth in meth_list:
 
@@ -129,11 +128,11 @@ def modulesLoader(session):
 
 
 class WampFrontend(ApplicationSession):
-
     @inlineCallbacks
     def onJoin(self, details):
 
-        LOG.info("WAMP server session ready!")
+        LOG.info("Joined in WAMP server: session ready!")
+        print("Joined in WAMP server: session ready!")
 
         # BOARD REGISTRAION
         try:
@@ -158,8 +157,7 @@ class WampFrontend(ApplicationSession):
 
 
 class WampClientFactory(
-        websocket.WampWebSocketClientFactory, ReconnectingClientFactory):
-
+    websocket.WampWebSocketClientFactory, ReconnectingClientFactory):
     maxDelay = 30
 
     def clientConnectionFailed(self, connector, reason):
@@ -175,7 +173,6 @@ class WampClientFactory(
 
 
 class WampManager(object):
-
     def __init__(self):
         component_config = types.ComponentConfig(
             realm=unicode(CONF.wamp.wamp_realm))
@@ -224,7 +221,6 @@ def LogoLR():
 
 
 class LightningRod(object):
-
     def __init__(self):
 
         logging.register_options(CONF)
@@ -234,7 +230,21 @@ class LightningRod(object):
 
         LogoLR()
 
-        print("Device: " + CONF.device.name)
+        """
+        device_name = CONF.device.name
+
+        path = package_path + "/devices/" + device_name + ".py"
+
+        if os.path.exists(path):
+            LOG.debug("Device module path: " + path)
+
+            device_module = imp.load_source("device", path)
+            LOG.info("Device " + device_name + " module imported!")
+
+            device = device_module.Yun()
+        else:
+            LOG.warning("Device "+device_name+" not supported!")
+        """
 
         w = WampManager()
 

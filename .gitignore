@@ -3,4 +3,6 @@
 *.swp
 *~
 .tox/
+.idea/
 pep8_result.txt
+plugin_sme.py

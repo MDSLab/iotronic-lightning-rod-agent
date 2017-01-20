@@ -15,9 +15,13 @@
 
 
 import abc
+import httplib2
+from iotronic_lightningrod.config import package_path
+import json
 import six
 import threading
 from twisted.internet.defer import inlineCallbacks
+
 
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
@@ -34,17 +38,15 @@ def sendNotification(session, msg=None):
 
 @six.add_metaclass(abc.ABCMeta)
 class Plugin(threading.Thread):
-
     # __metaclass__ = abc.ABCMeta
 
     def __init__(self, name, session):
-
         threading.Thread.__init__(self)
         # self.setDaemon(1)
         self.setName("Plugin " + str(self.name))  # Set thread name
 
         self.name = name
-        self.path = "./iotronic_lightningrod/plugins/" + self.name + ".py"
+        self.path = package_path + "/plugins/" + self.name + ".py"
         self.status = "None"
         self.session = session
 
@@ -68,3 +70,13 @@ class Plugin(threading.Thread):
     def setStatus(self, status):
         self.status = status
         LOG.debug("Plugin " + self.name + " changed status: " + self.status)
+
+    def sendRequest(self, url=None, headers={}, data=None, verbose=False):
+        http = httplib2.Http()
+        headers = headers
+        response, send = http.request(url, 'POST', headers=headers, body=data)
+        result = json.dumps(response, sort_keys=True, indent=4, separators=(',', ': '))
+        if verbose:
+            LOG.debug("\nREST REQUEST:\n" + send)
+            LOG.debug("\nREST RESPONSE:\n" + result)
+        return send

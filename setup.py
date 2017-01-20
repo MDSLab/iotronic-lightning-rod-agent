@@ -28,14 +28,16 @@ setuptools.setup(
     setup_requires=['pbr>=1.8'],
     pbr=True,
 
-
     entry_points={
         's4t.modules': [
-            'utility = iotronic_lightningrod.modules.utility:Utility',
+            'utility = iotronic_lightningrod.modules.utils:Utility',
             'plugin = iotronic_lightningrod.modules.plugin_manager:PluginManager',
-            'gpio = iotronic_lightningrod.modules.gpio_manager:GpioManager',
-
+            'device = iotronic_lightningrod.modules.device_manager:DeviceManager',
         ],
+        's4t.device.modules': [
+            'yun = iotronic_lightningrod.devices.yun:Yun',
+        ],
+
     },
 
 )

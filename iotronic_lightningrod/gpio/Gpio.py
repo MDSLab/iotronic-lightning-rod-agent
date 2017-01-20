@@ -13,19 +13,25 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from iotronic_lightningrod.plugins import Plugin
+
+import abc
+import six
 
 from oslo_log import log as logging
 
 LOG = logging.getLogger(__name__)
 
+from iotronic_lightningrod.config import package_path
 
-# User imports
 
+@six.add_metaclass(abc.ABCMeta)
+class Gpio(object):
+    def __init__(self, name):
+        self.name = name
+        self.path = package_path + "/gpio/" + self.name + ".py"
 
-class Worker(Plugin.Plugin):
-    def __init__(self, name, session):
-        super(Worker, self).__init__(name, session)
+    def EnableGPIO(self):
+        pass
 
-    def run(self):
-        self.Done()
+    def DisableGPIO(self):
+        pass

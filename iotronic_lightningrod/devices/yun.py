@@ -14,13 +14,19 @@
 #    under the License.
 
 
-import os
-import pkg_resources
+from iotronic_lightningrod.devices import Device
+from iotronic_lightningrod.gpio import yun
 
-dist = pkg_resources.get_distribution(__package__)
-entry_points_name = os.path.join(
-    dist.location, dist.egg_name()) + ".egg-info/entry_points.txt"
-# print entry_points_name
+from oslo_log import log as logging
 
-package_path = os.path.join(dist.location, __package__)
-# print package_path
+LOG = logging.getLogger(__name__)
+
+
+class System(Device.Device):
+    def __init__(self):
+        super(System, self).__init__("yun")
+
+        yun.YunGpio().EnableGPIO()
+
+    def testLED(self):
+        pass

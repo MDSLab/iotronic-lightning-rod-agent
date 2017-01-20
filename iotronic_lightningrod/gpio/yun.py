@@ -13,28 +13,33 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-__author__ = "MDSLAB Team"
 
-import abc
-import six
+from iotronic_lightningrod.gpio import Gpio
 
 from oslo_log import log as logging
 
 LOG = logging.getLogger(__name__)
 
 
-@six.add_metaclass(abc.ABCMeta)
-class Device(object):
-    """Base class for each s4t Lightning-rod device.
+class YunGpio(Gpio.Gpio):
+    def __init__(self):
+        super(YunGpio, self).__init__("yun")
+        LOG.debug("Arduino YUN gpio module inporting...")
 
-    """
+    # Enable GPIO
+    def EnableGPIO(self):
+        LOG.info(" - EnableGPIO CALLED...")
 
-    def __init__(self, device_name):
-        self.device_name = device_name
+        with open('/sys/bus/iio/devices/iio:device0/enable', 'a') as f:
+            f.write('1')
 
-    """
-    @abc.abstractmethod
-    def test(self):
-        #Main plugin method.
+        result = "GPIO result: enabled!\n"
+        LOG.info(result)
 
-    """
+    def DisableGPIO(self):
+        LOG.info(" - DisableGPIO CALLED...")
+        with open('/sys/bus/iio/devices/iio:device0/enable', 'a') as f:
+            f.write('0')
+
+        result = "GPIO result: disabled!\n"
+        LOG.info(result)

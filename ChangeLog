@@ -1,6 +1,7 @@
 CHANGES
 =======
 
+* Server device support added
 * Device and Gpio modules/classes added; development of Arduino Yun templates started
 * lightningrod python module renamed to iotronic_lightningrod;
 * tox-pep8 tests: passed

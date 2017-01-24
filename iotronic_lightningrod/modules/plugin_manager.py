@@ -17,20 +17,36 @@
 import imp
 from iotronic_lightningrod.modules import Module
 import os
+import threading
 from twisted.internet.defer import returnValue
 
 from oslo_log import log as logging
 
 LOG = logging.getLogger(__name__)
 
+from iotronic_lightningrod.config import iotronic_home
 from iotronic_lightningrod.config import package_path
+from iotronic_lightningrod.plugins import PluginSerializer
 
 
 def makeNothing():
     pass
 
 
+def createPlugin(plugin_name, code):
+
+    ser = PluginSerializer.ObjectSerializer()
+    loaded = ser.deserialize_entity({}, code)
+    LOG.debug("- plugin loaded code:\n" + loaded)
+    LOG.debug("- plugin creation starting...")
+    plugin_path = iotronic_home + "plugins/" + plugin_name + ".py"
+
+    with open(plugin_path, "w") as pluginfile:
+        pluginfile.write(loaded)
+
+
 class PluginManager(Module.Module):
+
     def __init__(self, session):
 
         self.session = session
@@ -41,19 +57,19 @@ class PluginManager(Module.Module):
     def test_plugin(self):
         LOG.info(" - test_plugin CALLED...")
 
-        name = "plugin_ZERO"
+        plugin_name = "plugin_ZERO"
         LOG.debug("Plugins path: " + package_path)
 
-        path = package_path + "/plugins/" + name + ".py"
+        path = package_path + "/plugins/" + plugin_name + ".py"
 
         if os.path.exists(path):
 
             LOG.info("Plugin PATH: " + path)
 
             task = imp.load_source("plugin", path)
-            LOG.info("Plugin " + name + " imported!")
+            LOG.info("Plugin " + plugin_name + " imported!")
 
-            worker = task.Worker(name, self.session)
+            worker = task.Worker(plugin_name, self.session)
             worker.setStatus("STARTED")
             result = worker.checkStatus()
 
@@ -61,29 +77,49 @@ class PluginManager(Module.Module):
 
             returnValue(result)
 
-            """
-            yield task.PluginExec("plugin_ZERO", self.session)
-            result = "Plugin "+name+" started!"
-            LOG.info(result)
-            returnValue(result)
-            """
-
         else:
             LOG.warning("ERROR il file " + path + " non esiste!")
 
-    def PluginInject(self):
-        LOG.info(" - PluginInject CALLED...")
-        yield makeNothing()
-        result = "plugin result: PluginInject!\n"
+    def PluginInject(self, plugin_name, code):
+        # 1. get Plugin files
+        # 2. deserialize files
+        # 3. store files
+        LOG.info("- PluginInject CALLED:")
+        LOG.info(" - plugin name: " + plugin_name)
+        LOG.info(" - plugin dumped code:\n" + code)
+
+        t = threading.Thread(target=createPlugin, args=(plugin_name, code,))
+        t.start()
+
+        yield t.join()
+
+        result = "PluginInject result: injected!\n"
         LOG.info(result)
+
         returnValue(result)
 
-    def PluginStart(self):
-        LOG.info(" - PluginStart CALLED...")
-        yield makeNothing()
-        result = "plugin result: PluginStart!\n"
-        LOG.info(result)
-        returnValue(result)
+    def PluginStart(self, plugin_name):
+        LOG.info("- PluginStart CALLED...")
+
+        LOG.debug(" - Plugins path: " + package_path)
+
+        plugin_path = iotronic_home + "plugins/" + plugin_name + ".py"
+
+        if os.path.exists(plugin_path):
+
+            task = imp.load_source("plugin", plugin_path)
+            LOG.info("Plugin " + plugin_name + " imported!")
+
+            worker = task.Worker(plugin_name, self.session)
+            worker.setStatus("STARTED")
+            result = worker.checkStatus()
+
+            yield worker.start()
+
+            returnValue(result)
+
+        else:
+            LOG.warning("ERROR il file " + plugin_path + " non esiste!")
 
     def PluginStop(self):
         LOG.info(" - PluginStop CALLED...")

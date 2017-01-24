@@ -14,9 +14,9 @@
 #    under the License.
 
 
-from iotronic_lightningrod.gpio import Gpio
-
 from oslo_log import log as logging
+
+from iotronic_lightningrod.devices.gpio import Gpio
 
 LOG = logging.getLogger(__name__)
 

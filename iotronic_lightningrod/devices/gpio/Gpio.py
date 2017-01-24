@@ -30,8 +30,16 @@ class Gpio(object):
         self.name = name
         self.path = package_path + "/gpio/" + self.name + ".py"
 
+    @abc.abstractmethod
     def EnableGPIO(self):
-        pass
+        """Enable reading and writing functionalities of the GPIO module
 
+        :return: status of the operation (String)
+        """
+
+    @abc.abstractmethod
     def DisableGPIO(self):
-        pass
+        """Disable reading and writing functionalities of the GPIO module
+
+        :return: status of the operation (String)
+        """

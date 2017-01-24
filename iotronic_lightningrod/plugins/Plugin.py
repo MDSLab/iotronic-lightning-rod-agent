@@ -22,7 +22,6 @@ import six
 import threading
 from twisted.internet.defer import inlineCallbacks
 
-
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
@@ -38,9 +37,8 @@ def sendNotification(session, msg=None):
 
 @six.add_metaclass(abc.ABCMeta)
 class Plugin(threading.Thread):
-    # __metaclass__ = abc.ABCMeta
 
-    def __init__(self, name, session):
+    def __init__(self, name, session=None):
         threading.Thread.__init__(self)
         # self.setDaemon(1)
         self.setName("Plugin " + str(self.name))  # Set thread name
@@ -52,11 +50,11 @@ class Plugin(threading.Thread):
 
         self.setStatus("INITED")
 
+    @abc.abstractmethod
     def run(self):
-        """Metodo run da ridefinire nel file del plugin
+        """RUN method where to implement the user's plugin logic
 
         """
-        pass
 
     def Done(self):
         self.setStatus("COMPLETED")

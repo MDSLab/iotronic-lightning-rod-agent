@@ -24,3 +24,5 @@ entry_points_name = os.path.join(
 
 package_path = os.path.join(dist.location, __package__)
 # print package_path
+
+iotronic_home = "/opt/stack4things/iotronic/"

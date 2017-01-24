@@ -14,10 +14,10 @@
 #    under the License.
 
 
-from iotronic_lightningrod.devices import Device
-from iotronic_lightningrod.gpio import yun
-
 from oslo_log import log as logging
+
+from iotronic_lightningrod.devices import Device
+from iotronic_lightningrod.devices.gpio import yun
 
 LOG = logging.getLogger(__name__)
 

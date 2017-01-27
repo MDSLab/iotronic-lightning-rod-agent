@@ -1,0 +1,11 @@
+{
+  "node": {
+    "token": "<REGISTRATION-TOKEN>"
+  },
+  "iotronic": {
+    "registration-agent": {
+      "url": "ws://<WAMP-SERVER>:<WAMP-PORT>/",
+      "realm": "<IOTRONIC-REALM>"
+    }
+  }
+}

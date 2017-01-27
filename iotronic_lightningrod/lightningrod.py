@@ -35,12 +35,18 @@ import sys
 
 # Iotronic imports
 from config import entry_points_name
+from iotronic_lightningrod.Node import Node
 
-# Logging configuration
+
+# Global variables
 LOG = logging.getLogger(__name__)
-
 CONF = cfg.CONF
+node = None
+reconnection = False
+meth_list = None
 
+
+"""
 # WAMP opts
 wamp_opts = [
     cfg.StrOpt('wamp_ip',
@@ -58,13 +64,14 @@ wamp_opts = [
 ]
 
 CONF.register_opts(wamp_opts, 'wamp')
+"""
 
-# Device opts
+# Device options
 device_group = cfg.OptGroup(name='device', title='Device options')
 device_opts = [
 
-    cfg.StrOpt('name',
-               default='laptop',
+    cfg.StrOpt('type',
+               default='server',
                help='Device type.'),
 ]
 
@@ -72,12 +79,21 @@ CONF.register_group(device_group)
 CONF.register_opts(device_opts, 'device')
 
 
+def ModuleWampRegister(session):
+
+    for meth in meth_list:
+        if (meth[0] != "__init__"):  # We don't considere the __init__ method
+            LOG.debug(" - " + str(meth[0]))
+            # LOG.debug(" --> " + str(meth[1]))
+            session.register(inlineCallbacks(meth[1]), u'iotronic.' + node.uuid + '.' + meth[0])
+
+
 def modulesLoader(session):
     '''Modules loader method thorugh stevedore libraries.
 
     '''
 
-    LOG.debug("Entry-points: " + entry_points_name)
+    LOG.debug("Entry-points:\n" + entry_points_name)
     LOG.info("Available modules: ")
 
     ep = []
@@ -104,89 +120,98 @@ def modulesLoader(session):
 
             # print(ext.name)
 
-            if (ext.name == 'gpio') & (CONF.device.name == 'laptop'):
+            if (ext.name == 'gpio') & (CONF.device.type == 'server'):
                 print('- GPIO module disabled for laptop devices')
 
             else:
                 mod = ext.plugin(session)
 
-                LOG.info('- ' + mod.name)
-                print('- ' + mod.name)
-
                 # Methods list for each module
+                global meth_list
                 meth_list = inspect.getmembers(mod, predicate=inspect.ismethod)
 
-                LOG.debug("- RPC list of " + str(mod.name) + ":")
+                # print len(meth_list)
+                if len(meth_list) == 1:
 
-                for meth in meth_list:
+                    LOG.info(" - No RPC to register for " + str(ext.name) + " module!")
 
-                    # print meth[0]
-                    if (meth[0] != "__init__"):  # We don't considere the __init__ method
-                        LOG.debug(" - " + str(meth[0]))
-                        session.register(inlineCallbacks(
-                            meth[1]), u'board.' + meth[0])
+                else:
+
+                    LOG.debug("- RPC list of " + str(mod.name) + ":")
+
+                    ModuleWampRegister(session)
 
 
 class WampFrontend(ApplicationSession):
+
     @inlineCallbacks
     def onJoin(self, details):
 
         LOG.info("Joined in WAMP server: session ready!")
-        print("Joined in WAMP server: session ready!")
+        print("WAMP: \n - status: session ready!")
 
-        # BOARD REGISTRAION
-        try:
-            res = yield self.call(u'register_board')
-            LOG.info("Board registration call result: {}".format(res))
-        except Exception as e:
-            LOG.warning("Board registration call error: {0}".format(e))
+        if reconnection is False:
 
-        try:
+            LOG.info("Lightning-rod initialization starting...")
 
-            # self.register(pinco, u'com.myapp.hello')
-            yield modulesLoader(self)
-            LOG.info("Procedures registered.")
-            LOG.info("Modules loaded.")
+            # NODE REGISTRAION
+            try:
+                print (" - session ID: " + str(details.session))
+                res = yield self.call(u'stack4things.register', (node.token, details.session))
+                LOG.info("Board registration call result: {}".format(res))
+            except Exception as e:
+                LOG.warning("Board registration call error: {0}".format(e))
 
-        except Exception as e:
-            LOG.warning(
-                "WARNING - Could not register procedures: {0}".format(e))
+            # LOADING NODE MODULES
+            try:
+                yield modulesLoader(self)
+                LOG.info("Procedures registered.")
+                LOG.info("Modules loaded.")
 
+            except Exception as e:
+                LOG.warning("WARNING - Could not register procedures: {0}".format(e))
+
+        else:
+            ModuleWampRegister(self)
+            LOG.warning("WAMP session recovered!")
+
+    @inlineCallbacks
     def onLeave(self, details):
-        LOG.info('session left: {}'.format(details))
+        LOG.info('WAMP session left: {}'.format(details))
 
 
-class WampClientFactory(
-    websocket.WampWebSocketClientFactory, ReconnectingClientFactory):
-    maxDelay = 30
+class WampClientFactory(websocket.WampWebSocketClientFactory, ReconnectingClientFactory):
 
     def clientConnectionFailed(self, connector, reason):
-        # print "reason:", reason
         LOG.warning("Wamp Connection Failed.")
-        ReconnectingClientFactory.clientConnectionFailed(
-            self, connector, reason)
+        ReconnectingClientFactory.clientConnectionFailed(self, connector, reason)
 
     def clientConnectionLost(self, connector, reason):
-        # print "reason:", reason
         LOG.warning("Wamp Connection Lost.")
+
+        global reconnection
+        print("\nreconnection status " + str(reconnection))
+        if reconnection is False:
+            reconnection = True
+            print("reconnection set to " + str(reconnection))
+
         ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
 
 
 class WampManager(object):
-    def __init__(self):
-        component_config = types.ComponentConfig(
-            realm=unicode(CONF.wamp.wamp_realm))
-        session_factory = wamp.ApplicationSessionFactory(
-            config=component_config)
+    def __init__(self, wamp_conf):
+
+        # component_config = types.ComponentConfig(realm=unicode(CONF.wamp.wamp_realm))
+        component_config = types.ComponentConfig(realm=unicode(wamp_conf['realm']))
+        session_factory = wamp.ApplicationSessionFactory(config=component_config)
         session_factory.session = WampFrontend
 
-        transport_factory = WampClientFactory(
-            session_factory, url=CONF.wamp.wamp_transport_url)
+        # transport_factory = WampClientFactory(session_factory, url=CONF.wamp.wamp_transport_url)
+        transport_factory = WampClientFactory(session_factory, url=wamp_conf['url'])
         transport_factory.autoPingInterval = 1
         transport_factory.autoPingTimeout = 1
 
-        LOG.debug("wamp url: %s wamp realm: %s",
-                  CONF.wamp.wamp_transport_url, CONF.wamp.wamp_realm)
+        # LOG.debug("wamp url: %s wamp realm: %s", wamp_conf['url'], wamp_conf['realm'])
 
         websocket.connectWS(transport_factory)
 
@@ -221,6 +246,7 @@ def LogoLR():
 
 
 class LightningRod(object):
+
     def __init__(self):
 
         logging.register_options(CONF)
@@ -230,23 +256,10 @@ class LightningRod(object):
 
         LogoLR()
 
-        """
-        device_name = CONF.device.name
+        global node
+        node = Node()
 
-        path = package_path + "/devices/" + device_name + ".py"
-
-        if os.path.exists(path):
-            LOG.debug("Device module path: " + path)
-
-            device_module = imp.load_source("device", path)
-            LOG.info("Device " + device_name + " module imported!")
-
-            device = device_module.Yun()
-        else:
-            LOG.warning("Device "+device_name+" not supported!")
-        """
-
-        w = WampManager()
+        w = WampManager(node.wamp)
 
         try:
             w.start()

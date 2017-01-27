@@ -24,7 +24,7 @@ LOG = logging.getLogger(__name__)
 class YunGpio(Gpio.Gpio):
     def __init__(self):
         super(YunGpio, self).__init__("yun")
-        LOG.debug("Arduino YUN gpio module inporting...")
+        LOG.info("Arduino YUN gpio module inporting...")
 
     # Enable GPIO
     def EnableGPIO(self):
@@ -33,7 +33,7 @@ class YunGpio(Gpio.Gpio):
         with open('/sys/bus/iio/devices/iio:device0/enable', 'a') as f:
             f.write('1')
 
-        result = "GPIO result: enabled!\n"
+        result = "  - GPIO result: enabled!\n"
         LOG.info(result)
 
     def DisableGPIO(self):
@@ -41,5 +41,5 @@ class YunGpio(Gpio.Gpio):
         with open('/sys/bus/iio/devices/iio:device0/enable', 'a') as f:
             f.write('0')
 
-        result = "GPIO result: disabled!\n"
+        result = "  - GPIO result: disabled!\n"
         LOG.info(result)

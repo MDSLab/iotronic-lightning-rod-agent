@@ -15,9 +15,12 @@
 
 
 import imp
+import inspect
 from iotronic_lightningrod.config import package_path
 from iotronic_lightningrod.modules import Module
 import os
+
+from twisted.internet.defer import inlineCallbacks
 
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
@@ -28,6 +31,20 @@ from oslo_config import cfg
 CONF = cfg.CONF
 
 
+def DeviceWampRegister(dev_meth_list, session):
+
+    print("  DeviceWampRegister:")
+
+    for meth in dev_meth_list:
+
+        # print meth[0]
+        if (meth[0] != "__init__"):  # We don't considere the __init__ method
+            print("  ----> " + str(meth[0]) + " - " + str(meth[1]))
+            session.register(inlineCallbacks(meth[1]), u'board.' + meth[0])
+
+            LOG.info(" - DEVICE RPC function of " + meth[0] + " registered!")
+
+
 class DeviceManager(Module.Module):
     def __init__(self, session):
 
@@ -36,18 +53,22 @@ class DeviceManager(Module.Module):
         # Module declaration
         super(DeviceManager, self).__init__("DeviceManager", self.session)
 
-        device_name = CONF.device.name
+        device_type = CONF.device.type
 
-        path = package_path + "/devices/" + device_name + ".py"
+        path = package_path + "/devices/" + device_type + ".py"
 
         if os.path.exists(path):
-            LOG.debug("Device module path: " + path)
+            # LOG.debug("Device module path: " + path)
 
             device_module = imp.load_source("device", path)
 
-            LOG.info("Device " + device_name + " module imported!")
+            LOG.info(" - Device " + device_type + " module imported!")
 
-            device_module.System()
+            device = device_module.System(session)
+
+            dev_meth_list = inspect.getmembers(device, predicate=inspect.ismethod)
+
+            DeviceWampRegister(dev_meth_list, session)
 
         else:
-            LOG.warning("Device " + device_name + " not supported!")
+            LOG.warning("Device " + device_type + " not supported!")

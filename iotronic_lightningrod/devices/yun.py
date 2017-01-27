@@ -14,19 +14,28 @@
 #    under the License.
 
 
-from oslo_log import log as logging
+from twisted.internet.defer import returnValue
 
 from iotronic_lightningrod.devices import Device
 from iotronic_lightningrod.devices.gpio import yun
 
+from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
 
+def makeNothing():
+    pass
+
+
 class System(Device.Device):
-    def __init__(self):
-        super(System, self).__init__("yun")
+    def __init__(self, session):
+        super(System, self).__init__("yun", session)
 
         yun.YunGpio().EnableGPIO()
 
     def testLED(self):
-        pass
+        LOG.info(" - testLED CALLED...")
+        yield makeNothing()
+        result = "testLED result!\n"
+        LOG.info(result)
+        returnValue(result)

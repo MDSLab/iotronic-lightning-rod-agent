@@ -39,7 +39,7 @@ def createPlugin(plugin_name, code):
     loaded = ser.deserialize_entity({}, code)
     LOG.debug("- plugin loaded code:\n" + loaded)
     LOG.debug("- plugin creation starting...")
-    plugin_path = iotronic_home + "plugins/" + plugin_name + ".py"
+    plugin_path = iotronic_home + "/plugins/" + plugin_name + ".py"
 
     with open(plugin_path, "w") as pluginfile:
         pluginfile.write(loaded)
@@ -86,7 +86,7 @@ class PluginManager(Module.Module):
         # 3. store files
         LOG.info("- PluginInject CALLED:")
         LOG.info(" - plugin name: " + plugin_name)
-        LOG.info(" - plugin dumped code:\n" + code)
+        LOG.debug(" - plugin dumped code:\n" + code)
 
         t = threading.Thread(target=createPlugin, args=(plugin_name, code,))
         t.start()
@@ -103,7 +103,7 @@ class PluginManager(Module.Module):
 
         LOG.debug(" - Plugins path: " + package_path)
 
-        plugin_path = iotronic_home + "plugins/" + plugin_name + ".py"
+        plugin_path = iotronic_home + "/plugins/" + plugin_name + ".py"
 
         if os.path.exists(plugin_path):
 

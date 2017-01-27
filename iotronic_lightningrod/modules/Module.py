@@ -36,6 +36,7 @@ class Module(object):
         self.session = session
 
         LOG.info("Loading module " + self.name + "...")
+        print('- ' + self.name)
 
     """
     @abc.abstractmethod

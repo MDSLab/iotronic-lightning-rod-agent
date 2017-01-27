@@ -13,28 +13,26 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from twisted.internet.defer import returnValue
-
-from iotronic_lightningrod.devices import Device
-from iotronic_lightningrod.devices.gpio import server
 
 from oslo_log import log as logging
+
+from iotronic_lightningrod.devices.gpio import Gpio
+
 LOG = logging.getLogger(__name__)
 
 
-def makeNothing():
-    pass
+class ServerGpio(Gpio.Gpio):
+    def __init__(self):
+        super(ServerGpio, self).__init__("yun")
+        LOG.info("Server gpio module inporting...")
 
-
-class System(Device.Device):
-    def __init__(self, session):
-        super(System, self).__init__("server", session)
-
-        server.ServerGpio().EnableGPIO()
-
-    def testRPC(self):
-        LOG.info(" - testRPC CALLED...")
-        yield makeNothing()
-        result = "testRPC result: testRPC is working!!!\n"
+    # Enable GPIO
+    def EnableGPIO(self):
+        LOG.info(" - EnableGPIO CALLED...")
+        result = '  - Gpio not available for server device!'
         LOG.info(result)
-        returnValue(result)
+
+    def DisableGPIO(self):
+        LOG.info(" - DisableGPIO CALLED...")
+        result = '  - Gpio not available for server device!'
+        LOG.info(result)

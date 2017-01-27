@@ -29,12 +29,6 @@ class Device(object):
 
     """
 
-    def __init__(self, device_name):
-        self.device_name = device_name
-
-    """
-    @abc.abstractmethod
-    def test(self):
-        #Main plugin method.
-
-    """
+    def __init__(self, device_type, session):
+        self.device_type = device_type
+        self.session = session

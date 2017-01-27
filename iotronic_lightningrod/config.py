@@ -20,9 +20,9 @@ import pkg_resources
 dist = pkg_resources.get_distribution(__package__)
 entry_points_name = os.path.join(
     dist.location, dist.egg_name()) + ".egg-info/entry_points.txt"
-# print entry_points_name
 
+# Iotronic python package folder
 package_path = os.path.join(dist.location, __package__)
-# print package_path
 
-iotronic_home = "/opt/stack4things/iotronic/"
+# Iotronic home folder
+iotronic_home = "/opt/stack4things/iotronic"

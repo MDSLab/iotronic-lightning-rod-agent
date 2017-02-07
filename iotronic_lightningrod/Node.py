@@ -71,7 +71,6 @@ class Node(object):
         except Exception as err:
             LOG.info('Node settings:')
             LOG.error(" - Configuration error in " + iotronic_home + "/settings.json: " + str(err))
-            print("ERROR - Configuration error in " + iotronic_home + "/settings.json: " + str(err))
 
     def getWampAgent(self, config):
         '''This method gets and sets the WAMP Node attributes from the conf file.

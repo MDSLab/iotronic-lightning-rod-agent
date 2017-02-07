@@ -63,11 +63,11 @@ class Node(object):
             LOG.error("Configuration error in " + iotronic_home + "/settings.json: " + str(err))
 
         LOG.debug('Node settings:')
-        LOG.debug(' - token: ' + self.token)
-        LOG.debug(' - uuid: ' + self.uuid)
+        LOG.debug(' - token: ' + str(self.token))
+        LOG.debug(' - uuid: ' + str(self.uuid))
         print('Node settings:')
-        print(' - token: ' + self.token)
-        print(' - uuid: ' + self.uuid)
+        print(' - token: ' + str(self.token))
+        print(' - uuid: ' + str(self.uuid))
 
         self.getWampAgent(self.config)
 
@@ -83,5 +83,5 @@ class Node(object):
             self.wamp = config['config']['iotronic']['registration-agent']
             LOG.info('Registration Agent settings:')
 
-        LOG.debug(' - url: ' + self.wamp['url'])
-        LOG.debug(' - realm: ' + self.wamp['realm'])
+        LOG.debug(' - url: ' + str(self.wamp['url']))
+        LOG.debug(' - realm: ' + str(self.wamp['realm']))

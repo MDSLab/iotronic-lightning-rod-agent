@@ -59,17 +59,20 @@ class Node(object):
             self.uuid = self.node_conf['uuid']
             self.token = self.node_conf['token']
 
+            LOG.info('Node settings:')
+            LOG.info(' - token: ' + str(self.token))
+            LOG.info(' - uuid: ' + str(self.uuid))
+            print('Node settings:')
+            print(' - token: ' + str(self.token))
+            print(' - uuid: ' + str(self.uuid))
+
+            self.getWampAgent(self.config)
+
         except Exception as err:
-            LOG.error("Configuration error in " + iotronic_home + "/settings.json: " + str(err))
+            LOG.info('Node settings:')
+            LOG.error(" - Configuration error in " + iotronic_home + "/settings.json: " + str(err))
 
-        LOG.debug('Node settings:')
-        LOG.debug(' - token: ' + str(self.token))
-        LOG.debug(' - uuid: ' + str(self.uuid))
-        print('Node settings:')
-        print(' - token: ' + str(self.token))
-        print(' - uuid: ' + str(self.uuid))
 
-        self.getWampAgent(self.config)
 
     def getWampAgent(self, config):
         '''This method gets and sets the WAMP Node attributes from the conf file.

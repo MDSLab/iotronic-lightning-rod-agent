@@ -43,6 +43,7 @@ class Node(object):
 
         except Exception as err:
             LOG.error("Parsing error in " + iotronic_home + "/settings.json : " + str(err))
+            lr_settings = None
 
         return lr_settings
 

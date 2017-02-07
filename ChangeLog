@@ -1,6 +1,7 @@
 CHANGES
 =======
 
+* fixed configuration checks
 * Added VFS module; added configuration checks; modules reviewed
 * Configuration system updated (settings.json file used for dynamic configuration changes); Registration system updated; Introduced Node class
 * PluginManager updated: PluginInject and PluginStart RPC added

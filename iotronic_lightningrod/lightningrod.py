@@ -289,6 +289,7 @@ class LightningRod(object):
             w = WampManager(node.wamp)
         else:
             LOG.error("Node UUID is not defined!\nBye")
+            print("ERROR: Node UUID is not defined!\nBye")
             exit()
 
         try:

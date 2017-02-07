@@ -21,20 +21,27 @@ from iotronic_lightningrod.devices.gpio import server
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
+import inspect
+
+
+def whoami():
+    return inspect.stack()[1][3]
+
 
 def makeNothing():
     pass
 
 
 class System(Device.Device):
-    def __init__(self, session):
-        super(System, self).__init__("server", session)
+    def __init__(self):
+        super(System, self).__init__("server")
 
         server.ServerGpio().EnableGPIO()
 
     def testRPC(self):
-        LOG.info(" - testRPC CALLED...")
+        rpc_name = whoami()
+        LOG.info("RPC " + rpc_name + " CALLED...")
         yield makeNothing()
-        result = "testRPC result: testRPC is working!!!\n"
+        result = " - " + rpc_name + " result: testRPC is working!!!\n"
         LOG.info(result)
         returnValue(result)

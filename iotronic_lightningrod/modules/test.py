@@ -24,9 +24,9 @@ LOG = logging.getLogger(__name__)
 
 class Test(Module.Module):
 
-    def __init__(self, session):
+    def __init__(self, node):
 
-        super(Test, self).__init__("Test", session)
+        super(Test, self).__init__("Test", node)
 
     def test_function(self):
         import random
@@ -35,3 +35,8 @@ class Test(Module.Module):
         result = "DEVICE test result: TEST!"
         LOG.info(result)
         returnValue(result)
+
+    def add(self, x, y):
+        c = yield x + y
+        LOG.info("DEVICE add result: " + str(c))
+        returnValue(c)

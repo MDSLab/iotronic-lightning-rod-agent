@@ -27,6 +27,8 @@ from oslo_log import log as logging
 
 LOG = logging.getLogger(__name__)
 
+from iotronic_lightningrod.lightningrod import SESSION
+
 
 def refresh_stevedore(namespace=None):
     """Trigger reload of entry points.
@@ -53,8 +55,9 @@ def refresh_stevedore(namespace=None):
 
 
 class Utility(Module.Module):
-    def __init__(self, session):
-        super(Utility, self).__init__("Utility", session)
+
+    def __init__(self, node):
+        super(Utility, self).__init__("Utility", node)
 
     def hello(self, client_name, message):
         import random
@@ -62,16 +65,9 @@ class Utility(Module.Module):
         yield sleep(s)
         result = "Hello by board to Conductor " + client_name + \
                  " that said me " + message + " - Time: " + '%.2f' % s
-        # result = yield "Hello by board to Conductor "+client_name+" that said
-        # me "+message
         LOG.info("DEVICE hello result: " + str(result))
 
         returnValue(result)
-
-    def add(self, x, y):
-        c = yield x + y
-        LOG.info("DEVICE add result: " + str(c))
-        returnValue(c)
 
     def plug_and_play(self, new_module, new_class):
         LOG.info("LR modules loaded:\n\t" + new_module)
@@ -93,6 +89,6 @@ class Utility(Module.Module):
 
         yield named_objects
 
-        self.session.disconnect()
+        SESSION.disconnect()
 
         returnValue(str(named_objects))

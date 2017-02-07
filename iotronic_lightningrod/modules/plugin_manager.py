@@ -47,12 +47,10 @@ def createPlugin(plugin_name, code):
 
 class PluginManager(Module.Module):
 
-    def __init__(self, session):
-
-        self.session = session
+    def __init__(self, node):
 
         # Module declaration
-        super(PluginManager, self).__init__("PluginManager", self.session)
+        super(PluginManager, self).__init__("PluginManager", node)
 
     def test_plugin(self):
         LOG.info(" - test_plugin CALLED...")
@@ -69,7 +67,7 @@ class PluginManager(Module.Module):
             task = imp.load_source("plugin", path)
             LOG.info("Plugin " + plugin_name + " imported!")
 
-            worker = task.Worker(plugin_name, self.session)
+            worker = task.Worker(plugin_name)
             worker.setStatus("STARTED")
             result = worker.checkStatus()
 
@@ -101,16 +99,16 @@ class PluginManager(Module.Module):
     def PluginStart(self, plugin_name):
         LOG.info("- PluginStart CALLED...")
 
-        LOG.debug(" - Plugins path: " + package_path)
-
         plugin_path = iotronic_home + "/plugins/" + plugin_name + ".py"
+
+        LOG.debug(" - Plugin path: " + plugin_path)
 
         if os.path.exists(plugin_path):
 
             task = imp.load_source("plugin", plugin_path)
             LOG.info("Plugin " + plugin_name + " imported!")
 
-            worker = task.Worker(plugin_name, self.session)
+            worker = task.Worker(plugin_name)
             worker.setStatus("STARTED")
             result = worker.checkStatus()
 

@@ -30,10 +30,10 @@ class Module(object):
 
     # __metaclass__ = abc.ABCMeta
 
-    def __init__(self, name, session):
+    def __init__(self, name, node):
 
         self.name = name
-        self.session = session
+        self.node = node
 
         LOG.info("Loading module " + self.name + "...")
         print('- ' + self.name)

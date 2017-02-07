@@ -28,8 +28,8 @@ def makeNothing():
 
 
 class System(Device.Device):
-    def __init__(self, session):
-        super(System, self).__init__("yun", session)
+    def __init__(self):
+        super(System, self).__init__("yun")
 
         yun.YunGpio().EnableGPIO()
 

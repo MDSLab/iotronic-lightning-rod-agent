@@ -25,11 +25,13 @@ from twisted.internet.defer import inlineCallbacks
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
+from iotronic_lightningrod.lightningrod import SESSION
+
 
 @inlineCallbacks
-def sendNotification(session, msg=None):
+def sendNotification(msg=None):
     try:
-        res = yield session.call(u'register_board')
+        res = yield SESSION.call(u'agent.stack4things.echo', msg)
         LOG.info("NOTIFICATION " + str(res))
     except Exception as e:
         LOG.warning("NOTIFICATION error: {0}".format(e))
@@ -38,7 +40,7 @@ def sendNotification(session, msg=None):
 @six.add_metaclass(abc.ABCMeta)
 class Plugin(threading.Thread):
 
-    def __init__(self, name, session=None):
+    def __init__(self, name):
         threading.Thread.__init__(self)
         # self.setDaemon(1)
         self.setName("Plugin " + str(self.name))  # Set thread name
@@ -46,7 +48,6 @@ class Plugin(threading.Thread):
         self.name = name
         self.path = package_path + "/plugins/" + self.name + ".py"
         self.status = "None"
-        self.session = session
 
         self.setStatus("INITED")
 
@@ -58,7 +59,7 @@ class Plugin(threading.Thread):
 
     def Done(self):
         self.setStatus("COMPLETED")
-        sendNotification(self.session)
+        sendNotification(msg="hello!")
         self.checkStatus()
 
     def checkStatus(self):

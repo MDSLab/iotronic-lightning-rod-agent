@@ -33,6 +33,7 @@ setuptools.setup(
             'utility = iotronic_lightningrod.modules.utils:Utility',
             'plugin = iotronic_lightningrod.modules.plugin_manager:PluginManager',
             'device = iotronic_lightningrod.modules.device_manager:DeviceManager',
+            'vfs = iotronic_lightningrod.modules.vfs_manager:VfsManager',
         ],
         's4t.device.modules': [
             'yun = iotronic_lightningrod.devices.yun:Yun',

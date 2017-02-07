@@ -1,6 +1,7 @@
 CHANGES
 =======
 
+* Configuration system updated (settings.json file used for dynamic configuration changes); Registration system updated; Introduced Node class
 * PluginManager updated: PluginInject and PluginStart RPC added
 * Server device support added
 * Device and Gpio modules/classes added; development of Arduino Yun templates started

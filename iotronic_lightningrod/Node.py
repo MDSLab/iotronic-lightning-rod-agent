@@ -32,27 +32,48 @@ class Node(object):
         self.loadSettings()
 
     def loadConf(self):
-        with open(iotronic_home + '/settings.json') as settings:
-            lr_settings = json.load(settings)
+        '''This method loads the JSON configuraton file: settings.json.
+
+        '''
+
+        try:
+
+            with open(iotronic_home + '/settings.json') as settings:
+                lr_settings = json.load(settings)
+
+        except Exception as err:
+            LOG.error("Parsing error in " + iotronic_home + "/settings.json : " + err)
 
         return lr_settings
 
     def loadSettings(self):
+        '''This method gets and sets the Node attributes from the conf file.
+
+        '''
 
         self.config = self.loadConf()
 
-        self.node_conf = self.config['config']['node']
-        self.uuid = self.node_conf['uuid']
-        self.token = self.node_conf['token']
+        try:
+            self.node_conf = self.config['config']['node']
+            self.uuid = self.node_conf['uuid']
+            self.token = self.node_conf['token']
+
+        except Exception as err:
+            LOG.error("Configuration error in " + iotronic_home + "/settings.json: " + err)
 
         LOG.debug('Node settings:')
         LOG.debug(' - token: ' + self.token)
         LOG.debug(' - uuid: ' + self.uuid)
+        print('Node settings:')
+        print(' - token: ' + self.token)
+        print(' - uuid: ' + self.uuid)
 
         self.getWampAgent(self.config)
 
     def getWampAgent(self, config):
+        '''This method gets and sets the WAMP Node attributes from the conf file.
 
+        '''
         try:
             self.wamp = config['config']['iotronic']['main-agent']
             LOG.info('Wamp Agent settings:')

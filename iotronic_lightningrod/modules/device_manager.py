@@ -30,28 +30,31 @@ from oslo_config import cfg
 
 CONF = cfg.CONF
 
+from iotronic_lightningrod.lightningrod import SESSION
 
-def DeviceWampRegister(dev_meth_list, session):
 
-    print("  DeviceWampRegister:")
+def deviceWampRegister(dev_meth_list, node):
+    LOG.info("DeviceWampRegister:")
 
     for meth in dev_meth_list:
 
         # print meth[0]
         if (meth[0] != "__init__"):  # We don't considere the __init__ method
-            print("  ----> " + str(meth[0]) + " - " + str(meth[1]))
-            session.register(inlineCallbacks(meth[1]), u'board.' + meth[0])
+            LOG.info(" - " + str(meth[0]))
+            # SESSION.register(inlineCallbacks(meth[1]), u'board.' + meth[0])
+            rpc_addr = u'iotronic.' + node.uuid + '.' + meth[0]
+            LOG.debug(" --> " + str(rpc_addr))
+            SESSION.register(inlineCallbacks(meth[1]), rpc_addr)
 
             LOG.info(" - DEVICE RPC function of " + meth[0] + " registered!")
 
 
 class DeviceManager(Module.Module):
-    def __init__(self, session):
 
-        self.session = session
+    def __init__(self, node):
 
         # Module declaration
-        super(DeviceManager, self).__init__("DeviceManager", self.session)
+        super(DeviceManager, self).__init__("DeviceManager", node)
 
         device_type = CONF.device.type
 
@@ -64,11 +67,11 @@ class DeviceManager(Module.Module):
 
             LOG.info(" - Device " + device_type + " module imported!")
 
-            device = device_module.System(session)
+            device = device_module.System()
 
             dev_meth_list = inspect.getmembers(device, predicate=inspect.ismethod)
 
-            DeviceWampRegister(dev_meth_list, session)
+            deviceWampRegister(dev_meth_list, node)
 
         else:
             LOG.warning("Device " + device_type + " not supported!")

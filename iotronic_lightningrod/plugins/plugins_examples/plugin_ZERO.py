@@ -24,8 +24,8 @@ LOG = logging.getLogger(__name__)
 
 
 class Worker(Plugin.Plugin):
-    def __init__(self, name, session):
-        super(Worker, self).__init__(name, session)
+    def __init__(self, name):
+        super(Worker, self).__init__(name)
 
     def run(self):
         self.Done()

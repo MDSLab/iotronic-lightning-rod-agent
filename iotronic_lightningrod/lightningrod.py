@@ -41,10 +41,10 @@ from iotronic_lightningrod.Node import Node
 # Global variables
 LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
+SESSION = None
 node = None
 reconnection = False
-meth_list = None
-
+RPC = {}
 
 """
 # WAMP opts
@@ -79,13 +79,27 @@ CONF.register_group(device_group)
 CONF.register_opts(device_opts, 'device')
 
 
-def ModuleWampRegister(session):
+def moduleReloadInfo(session):
+    # LOG.debug(" - RPC obj " + str(RPC))
+
+    for mod in RPC:
+        LOG.debug("- Module reloaded: " + str(mod))
+        """
+        for meth in RPC[mod]:
+            LOG.debug("   - RPC reloaded: " + str(meth[0]))
+        """
+        moduleWampRegister(session, RPC[mod])
+
+
+def moduleWampRegister(session, meth_list):
 
     for meth in meth_list:
         if (meth[0] != "__init__"):  # We don't considere the __init__ method
-            LOG.debug(" - " + str(meth[0]))
+            LOG.info(" - " + str(meth[0]))
             # LOG.debug(" --> " + str(meth[1]))
-            session.register(inlineCallbacks(meth[1]), u'iotronic.' + node.uuid + '.' + meth[0])
+            rpc_addr = u'iotronic.' + node.uuid + '.' + meth[0]
+            LOG.debug(" --> " + str(rpc_addr))
+            session.register(inlineCallbacks(meth[1]), rpc_addr)
 
 
 def modulesLoader(session):
@@ -124,14 +138,17 @@ def modulesLoader(session):
                 print('- GPIO module disabled for laptop devices')
 
             else:
-                mod = ext.plugin(session)
+                mod = ext.plugin(node)
 
                 # Methods list for each module
                 global meth_list
                 meth_list = inspect.getmembers(mod, predicate=inspect.ismethod)
 
+                global RPC
+                RPC[mod.name] = meth_list
+
                 # print len(meth_list)
-                if len(meth_list) == 1:
+                if len(meth_list) == 1:  # there is only the "__init__" method of the python module
 
                     LOG.info(" - No RPC to register for " + str(ext.name) + " module!")
 
@@ -139,7 +156,7 @@ def modulesLoader(session):
 
                     LOG.debug("- RPC list of " + str(mod.name) + ":")
 
-                    ModuleWampRegister(session)
+                    moduleWampRegister(SESSION, meth_list)
 
 
 class WampFrontend(ApplicationSession):
@@ -147,8 +164,12 @@ class WampFrontend(ApplicationSession):
     @inlineCallbacks
     def onJoin(self, details):
 
+        global SESSION
+        SESSION = self
+
         LOG.info("Joined in WAMP server: session ready!")
         print("WAMP: \n - status: session ready!")
+        # print(" - session: " + str(details))
 
         if reconnection is False:
 
@@ -167,33 +188,38 @@ class WampFrontend(ApplicationSession):
                 yield modulesLoader(self)
                 LOG.info("Procedures registered.")
                 LOG.info("Modules loaded.")
+                print("Listening...")
 
             except Exception as e:
                 LOG.warning("WARNING - Could not register procedures: {0}".format(e))
 
         else:
-            ModuleWampRegister(self)
+            # yield ModuleWampRegister(self)
+            yield moduleReloadInfo(self)
             LOG.warning("WAMP session recovered!")
+            print("Listening...")
 
     @inlineCallbacks
     def onLeave(self, details):
         LOG.info('WAMP session left: {}'.format(details))
+        print("\nWAMP session left.")
 
 
 class WampClientFactory(websocket.WampWebSocketClientFactory, ReconnectingClientFactory):
 
     def clientConnectionFailed(self, connector, reason):
         LOG.warning("Wamp Connection Failed.")
+        print("\nWamp Connection Failed.")
         ReconnectingClientFactory.clientConnectionFailed(self, connector, reason)
 
     def clientConnectionLost(self, connector, reason):
         LOG.warning("Wamp Connection Lost.")
 
         global reconnection
-        print("\nreconnection status " + str(reconnection))
+        print("\nWAMP connection lost:\n- reconnection status " + str(reconnection))
         if reconnection is False:
             reconnection = True
-            print("reconnection set to " + str(reconnection))
+            print("- reconnection set to " + str(reconnection))
 
         ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
 

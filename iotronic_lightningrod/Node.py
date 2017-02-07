@@ -42,7 +42,7 @@ class Node(object):
                 lr_settings = json.load(settings)
 
         except Exception as err:
-            LOG.error("Parsing error in " + iotronic_home + "/settings.json : " + err)
+            LOG.error("Parsing error in " + iotronic_home + "/settings.json : " + str(err))
 
         return lr_settings
 
@@ -59,7 +59,7 @@ class Node(object):
             self.token = self.node_conf['token']
 
         except Exception as err:
-            LOG.error("Configuration error in " + iotronic_home + "/settings.json: " + err)
+            LOG.error("Configuration error in " + iotronic_home + "/settings.json: " + str(err))
 
         LOG.debug('Node settings:')
         LOG.debug(' - token: ' + self.token)

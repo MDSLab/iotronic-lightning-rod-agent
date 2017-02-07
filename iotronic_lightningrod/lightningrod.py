@@ -285,7 +285,11 @@ class LightningRod(object):
         global node
         node = Node()
 
-        w = WampManager(node.wamp)
+        if node.uuid is not None:
+            w = WampManager(node.wamp)
+        else:
+            LOG.error("Node UUID is not defined!\nBye")
+            exit()
 
         try:
             w.start()

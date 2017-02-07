@@ -1,9 +1,0 @@
-[s4t.device.modules]
-yun = iotronic_lightningrod.devices.yun:Yun
-
-[s4t.modules]
-device = iotronic_lightningrod.modules.device_manager:DeviceManager
-plugin = iotronic_lightningrod.modules.plugin_manager:PluginManager
-utility = iotronic_lightningrod.modules.utils:Utility
-vfs = iotronic_lightningrod.modules.vfs_manager:VfsManager
-

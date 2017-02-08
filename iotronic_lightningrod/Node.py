@@ -55,7 +55,8 @@ class Node(object):
         self.config = self.loadConf()
 
         try:
-            self.node_conf = self.config['config']['node']
+            # STATUS OPERATIVE
+            self.node_conf = self.config['iotronic']['node']
             self.uuid = self.node_conf['uuid']
             self.token = self.node_conf['token']
 
@@ -68,21 +69,31 @@ class Node(object):
 
             self.getWampAgent(self.config)
 
-        except Exception as err:
-            LOG.info('Node settings:')
-            LOG.error(" - Configuration error in " + iotronic_home + "/settings.json: " + str(err))
+        except Exception:
+            # STATUS REGISTERED
+            self.token = self.node_conf['token']
+            LOG.info('First registration node settings: ')
+            LOG.info(' - token: ' + str(self.token))
+            self.getWampAgent(self.config)
 
     def getWampAgent(self, config):
         '''This method gets and sets the WAMP Node attributes from the conf file.
 
         '''
         try:
-            self.wamp = config['config']['iotronic']['main-agent']
+            self.wamp = config['iotronic']['wamp']['main-agent']
             LOG.info('Wamp Agent settings:')
 
         except Exception:
-            self.wamp = config['config']['iotronic']['registration-agent']
+            self.wamp = config['iotronic']['wamp']['registration-agent']
             LOG.info('Registration Agent settings:')
 
         LOG.debug(' - url: ' + str(self.wamp['url']))
         LOG.debug(' - realm: ' + str(self.wamp['realm']))
+
+    def updateConf(self, conf):
+        print("PROVISION: \n - " + str(conf))
+        with open(iotronic_home + '/settings.json', 'w') as f:
+            json.dump(conf, f, indent=4)
+
+        self.loadSettings()

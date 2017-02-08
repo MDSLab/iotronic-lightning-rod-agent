@@ -175,14 +175,38 @@ class WampFrontend(ApplicationSession):
 
             LOG.info("Lightning-rod initialization starting...")
 
-            # NODE REGISTRAION
-            try:
-                print (" - session ID: " + str(details.session))
-                res = yield self.call(u'stack4things.register', (node.token, details.session))
-                LOG.info("Board registration call result: {}".format(res))
-            except Exception as e:
-                LOG.warning("Board registration call error: {0}".format(e))
+            if node.uuid is None:
+                # NODE REGISTRAION
+                try:
+                    print (" - session ID: " + str(details.session))
+                    res = yield self.call(u'stack4things.register', (node.token, details.session))
+                    LOG.info("Board registration call result: {}".format(res))
+                    node.updateConf(res)
+                    # LOADING NODE MODULES
+                    try:
+                        yield modulesLoader(self)
+                        LOG.info("Procedures registered.")
+                        LOG.info("Modules loaded.")
+                        print("Listening...")
 
+                    except Exception as e:
+                        LOG.warning("WARNING - Could not register procedures: {0}".format(e))
+
+                except Exception as e:
+                    LOG.warning("Board registration call error: {0}".format(e))
+            else:
+                LOG.debug("Node already registered")
+                # LOADING NODE MODULES
+                try:
+                    yield modulesLoader(self)
+                    LOG.info("Procedures registered.")
+                    LOG.info("Modules loaded.")
+                    print("Listening...")
+
+                except Exception as e:
+                    LOG.warning("WARNING - Could not register procedures: {0}".format(e))
+
+            """
             # LOADING NODE MODULES
             try:
                 yield modulesLoader(self)
@@ -192,6 +216,8 @@ class WampFrontend(ApplicationSession):
 
             except Exception as e:
                 LOG.warning("WARNING - Could not register procedures: {0}".format(e))
+
+            """
 
         else:
             # yield ModuleWampRegister(self)
@@ -285,12 +311,16 @@ class LightningRod(object):
         global node
         node = Node()
 
+        w = WampManager(node.wamp)
+
+        """
         if node.uuid is not None:
             w = WampManager(node.wamp)
         else:
             LOG.error("Node UUID is not defined!\nBye")
             print("ERROR: Node UUID is not defined!\nBye")
             exit()
+        """
 
         try:
             w.start()

@@ -92,3 +92,23 @@ class Utility(Module.Module):
         SESSION.disconnect()
 
         returnValue(str(named_objects))
+
+    def changeConf(self, conf):
+
+        yield self.node.getConf(conf)
+
+        self.node.setUpdateTime()
+
+        result = "Node configuration changed!"
+        LOG.info("PROVISIONING RESULT: " + str(result))
+
+        returnValue(result)
+
+    def destroyNode(self, conf):
+
+        yield self.node.setConf(conf)
+
+        result = "Node configuration cleaned!"
+        LOG.info("DESTROY RESULT: " + str(result))
+
+        returnValue(result)

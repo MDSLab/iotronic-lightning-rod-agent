@@ -25,10 +25,11 @@ from twisted.internet.defer import inlineCallbacks
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
+"""
 # OSLO imports
 from oslo_config import cfg
-
 CONF = cfg.CONF
+"""
 
 from iotronic_lightningrod.lightningrod import SESSION
 
@@ -56,7 +57,7 @@ class DeviceManager(Module.Module):
         # Module declaration
         super(DeviceManager, self).__init__("DeviceManager", node)
 
-        device_type = CONF.device.type
+        device_type = node.type  # CONF.device.type
 
         path = package_path + "/devices/" + device_type + ".py"
 

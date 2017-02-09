@@ -1,6 +1,7 @@
 CHANGES
 =======
 
+* cleaning egg info
 * Registration management first approach completed
 * fixed uuid configuration checks
 * cleaning egg info

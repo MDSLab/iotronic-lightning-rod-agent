@@ -29,9 +29,11 @@ from oslo_log import log as logging
 
 # MODULES imports
 import inspect
+import json
 import pkg_resources
 from stevedore import extension
 import sys
+
 
 # Iotronic imports
 from config import entry_points_name
@@ -65,7 +67,7 @@ wamp_opts = [
 
 CONF.register_opts(wamp_opts, 'wamp')
 """
-
+"""
 # Device options
 device_group = cfg.OptGroup(name='device', title='Device options')
 device_opts = [
@@ -77,6 +79,7 @@ device_opts = [
 
 CONF.register_group(device_group)
 CONF.register_opts(device_opts, 'device')
+"""
 
 
 def moduleReloadInfo(session):
@@ -100,6 +103,9 @@ def moduleWampRegister(session, meth_list):
             rpc_addr = u'iotronic.' + node.uuid + '.' + meth[0]
             LOG.debug(" --> " + str(rpc_addr))
             session.register(inlineCallbacks(meth[1]), rpc_addr)
+
+    LOG.info("Procedures registered.")
+    LOG.info("Modules loaded.")
 
 
 def modulesLoader(session):
@@ -134,7 +140,8 @@ def modulesLoader(session):
 
             # print(ext.name)
 
-            if (ext.name == 'gpio') & (CONF.device.type == 'server'):
+            # if (ext.name == 'gpio') & (CONF.device.type == 'server'):
+            if (ext.name == 'gpio') & (node.type == 'server'):
                 print('- GPIO module disabled for laptop devices')
 
             else:
@@ -158,6 +165,8 @@ def modulesLoader(session):
 
                     moduleWampRegister(SESSION, meth_list)
 
+        print("\nListening...")
+
 
 class WampFrontend(ApplicationSession):
 
@@ -166,64 +175,70 @@ class WampFrontend(ApplicationSession):
 
         global SESSION
         SESSION = self
+        node.session = SESSION
 
         LOG.info("Joined in WAMP server: session ready!")
         print("WAMP: \n - status: session ready!")
         # print(" - session: " + str(details))
 
+        # if (reconnection is False) | (node.status == "registered"):
         if reconnection is False:
 
             LOG.info("Lightning-rod initialization starting...")
+            print (" - session ID: " + str(details.session))
+            print (" - agent endpoint:\n" + json.dumps(node.wamp_config, indent=4))
 
             if node.uuid is None:
-                # NODE REGISTRAION
-                try:
-                    print (" - session ID: " + str(details.session))
-                    res = yield self.call(u'stack4things.register', (node.token, details.session))
-                    LOG.info("Board registration call result: {}".format(res))
-                    node.updateConf(res)
-                    # LOADING NODE MODULES
-                    try:
-                        yield modulesLoader(self)
-                        LOG.info("Procedures registered.")
-                        LOG.info("Modules loaded.")
-                        print("Listening...")
 
-                    except Exception as e:
-                        LOG.warning("WARNING - Could not register procedures: {0}".format(e))
+                # FIRST NODE REGISTRAION
+                try:
+
+                    LOG.debug("Node needs to be registered to Iotronic...")
+                    res = yield self.call(u'stack4things.register',
+                                          token=node.token, session=details.session)
+                    LOG.info("Board registration call result: {}".format(res))
+
+                    node.setConf(res)
+
+                    self.disconnect()
 
                 except Exception as e:
                     LOG.warning("Board registration call error: {0}".format(e))
+                    exit()
+
             else:
-                LOG.debug("Node already registered")
-                # LOADING NODE MODULES
+
+                # AFTER FIRST NODE REGISTRAION
+
+                if node.status == "registered":
+                    message = "\n\n\n !!! SELF RECONNECTION AFTER REGISTRATION !!!\n\n\n"
+                    LOG.info(message)
+                    print(message)
+                    node.loadSettings()
+                    node.updateStatus("operative")
+
                 try:
-                    yield modulesLoader(self)
-                    LOG.info("Procedures registered.")
-                    LOG.info("Modules loaded.")
-                    print("Listening...")
+
+                    res = yield self.call(u'stack4things.register_uuid',
+                                          uuid=node.uuid, session=details.session)
+
+                    # LOADING NODE MODULES
+                    try:
+
+                        yield modulesLoader(self)
+
+                    except Exception as e:
+                        LOG.warning("WARNING - Could not register procedures: {0}".format(e))
+                        exit()
 
                 except Exception as e:
-                    LOG.warning("WARNING - Could not register procedures: {0}".format(e))
-
-            """
-            # LOADING NODE MODULES
-            try:
-                yield modulesLoader(self)
-                LOG.info("Procedures registered.")
-                LOG.info("Modules loaded.")
-                print("Listening...")
-
-            except Exception as e:
-                LOG.warning("WARNING - Could not register procedures: {0}".format(e))
-
-            """
+                    LOG.warning("Board connection call error: {0}".format(e))
+                    exit()
 
         else:
-            # yield ModuleWampRegister(self)
             yield moduleReloadInfo(self)
             LOG.warning("WAMP session recovered!")
-            print("Listening...")
+            print("\nListening...")
 
     @inlineCallbacks
     def onLeave(self, details):
@@ -243,7 +258,8 @@ class WampClientFactory(websocket.WampWebSocketClientFactory, ReconnectingClient
 
         global reconnection
         print("\nWAMP connection lost:\n- reconnection status " + str(reconnection))
-        if reconnection is False:
+
+        if (reconnection is False) & (node.status != "registered"):
             reconnection = True
             print("- reconnection set to " + str(reconnection))
 
@@ -311,16 +327,11 @@ class LightningRod(object):
         global node
         node = Node()
 
-        w = WampManager(node.wamp)
+        current_time = node.getTimestamp()
+        LOG.info(" - Current time: " + current_time)
+        print (" - Current time: " + current_time)
 
-        """
-        if node.uuid is not None:
-            w = WampManager(node.wamp)
-        else:
-            LOG.error("Node UUID is not defined!\nBye")
-            print("ERROR: Node UUID is not defined!\nBye")
-            exit()
-        """
+        w = WampManager(node.wamp_config)
 
         try:
             w.start()

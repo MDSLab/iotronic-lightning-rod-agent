@@ -13,21 +13,35 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from iotronic_lightningrod.config import iotronic_home
+from datetime import datetime
+# from dateutil.tz import tzlocal
 import json
+
+from iotronic_lightningrod.config import iotronic_home
 
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
+
+SETTINGS = iotronic_home + '/settings.json'
 
 
 class Node(object):
 
     def __init__(self):
-        self.config = None
-        self.node_conf = None
+        self.iotronic_config = {}
+
+        self.node_config = {}
+        self.name = None
+        self.type = None
+        self.status = None
         self.uuid = None
         self.token = None
-        self.wamp = None
+        self.agent = None
+        self.mobile = None
+        self.session = None
+
+        self.wamp_config = None
+        self.extra = {}
 
         self.loadSettings()
 
@@ -38,11 +52,11 @@ class Node(object):
 
         try:
 
-            with open(iotronic_home + '/settings.json') as settings:
+            with open(SETTINGS) as settings:
                 lr_settings = json.load(settings)
 
         except Exception as err:
-            LOG.error("Parsing error in " + iotronic_home + "/settings.json : " + str(err))
+            LOG.error("Parsing error in " + SETTINGS + ": " + str(err))
             lr_settings = None
 
         return lr_settings
@@ -52,48 +66,86 @@ class Node(object):
 
         '''
 
-        self.config = self.loadConf()
+        self.iotronic_config = self.loadConf()
 
         try:
             # STATUS OPERATIVE
-            self.node_conf = self.config['iotronic']['node']
-            self.uuid = self.node_conf['uuid']
-            self.token = self.node_conf['token']
+            self.node_config = self.iotronic_config['iotronic']['node']
+            self.uuid = self.node_config['uuid']
+            self.token = self.node_config['token']
+            self.name = self.node_config['name']
+            self.status = self.node_config['status']
+            self.type = self.node_config['type']
+            self.mobile = self.node_config['mobile']
+            self.extra = self.node_config['extra']
+            self.created_at = self.node_config['created_at']
+            self.updated_at = self.getTimestamp()  # self.node_config['updated_at']
+
+            self.extra = self.iotronic_config['iotronic']['extra']
 
             LOG.info('Node settings:')
             LOG.info(' - token: ' + str(self.token))
             LOG.info(' - uuid: ' + str(self.uuid))
             print('Node settings:')
+            """
             print(' - token: ' + str(self.token))
             print(' - uuid: ' + str(self.uuid))
+            """
 
-            self.getWampAgent(self.config)
+            self.getWampAgent(self.iotronic_config)
+
+            print(json.dumps(self.node_config, indent=4))
 
         except Exception:
             # STATUS REGISTERED
-            self.token = self.node_conf['token']
+            self.token = self.node_config['token']
             LOG.info('First registration node settings: ')
             LOG.info(' - token: ' + str(self.token))
-            self.getWampAgent(self.config)
+            self.getWampAgent(self.iotronic_config)
 
     def getWampAgent(self, config):
         '''This method gets and sets the WAMP Node attributes from the conf file.
 
         '''
         try:
-            self.wamp = config['iotronic']['wamp']['main-agent']
+            self.wamp_config = config['iotronic']['wamp']['main-agent']
             LOG.info('Wamp Agent settings:')
 
         except Exception:
-            self.wamp = config['iotronic']['wamp']['registration-agent']
-            LOG.info('Registration Agent settings:')
+            if (self.status is None) | (self.status == "registered"):
+                self.wamp_config = config['iotronic']['wamp']['registration-agent']
+                LOG.info('Registration Agent settings:')
+            else:
+                LOG.error("Wamp agent configuration is wrong! "
+                          "Please check settings.json WAMP configuration...Bye!")
+                exit()
 
-        LOG.debug(' - url: ' + str(self.wamp['url']))
-        LOG.debug(' - realm: ' + str(self.wamp['realm']))
+        LOG.debug(' - url: ' + str(self.wamp_config['url']))
+        LOG.debug(' - realm: ' + str(self.wamp_config['realm']))
 
-    def updateConf(self, conf):
-        print("PROVISION: \n - " + str(conf))
-        with open(iotronic_home + '/settings.json', 'w') as f:
+    def setConf(self, conf):
+        print("NEW CONFIGURATION:\n" + str(json.dumps(conf, indent=4)))
+
+        with open(SETTINGS, 'w') as f:
             json.dump(conf, f, indent=4)
 
+        # Reload configuration
         self.loadSettings()
+
+    def updateStatus(self, status):
+        self.iotronic_config['iotronic']['node']["status"] = status
+
+        self.iotronic_config['iotronic']['node']["updated_at"] = self.updated_at
+
+        with open(SETTINGS, 'w') as f:
+            json.dump(self.iotronic_config, f, indent=4)
+
+    def getTimestamp(self):
+        # datetime.now(tzlocal()).isoformat()
+        return datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')
+
+    def setUpdateTime(self):
+        self.iotronic_config['iotronic']['node']["updated_at"] = self.updated_at
+
+        with open(SETTINGS, 'w') as f:
+            json.dump(self.iotronic_config, f, indent=4)

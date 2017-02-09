@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import inspect
 from twisted.internet.defer import returnValue
 
 from iotronic_lightningrod.devices import Device
@@ -20,8 +21,6 @@ from iotronic_lightningrod.devices.gpio import server
 
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
-
-import inspect
 
 
 def whoami():

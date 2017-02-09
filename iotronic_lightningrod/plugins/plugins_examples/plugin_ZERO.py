@@ -28,4 +28,5 @@ class Worker(Plugin.Plugin):
         super(Worker, self).__init__(name)
 
     def run(self):
-        self.Done()
+        LOG.info("Plugin process completed!")
+        # self.Done()

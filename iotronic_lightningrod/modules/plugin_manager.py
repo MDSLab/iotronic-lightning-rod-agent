@@ -15,6 +15,7 @@
 
 
 import imp
+import inspect
 from iotronic_lightningrod.modules import Module
 import os
 import threading
@@ -31,6 +32,10 @@ from iotronic_lightningrod.plugins import PluginSerializer
 
 def makeNothing():
     pass
+
+
+def whoami():
+    return inspect.stack()[1][3]
 
 
 def createPlugin(plugin_name, code):
@@ -53,7 +58,8 @@ class PluginManager(Module.Module):
         super(PluginManager, self).__init__("PluginManager", node)
 
     def test_plugin(self):
-        LOG.info(" - test_plugin CALLED...")
+        rpc_name = whoami()
+        LOG.info("RPC " + rpc_name + " CALLED...")
 
         plugin_name = "plugin_ZERO"
         LOG.debug("Plugins path: " + package_path)
@@ -82,7 +88,8 @@ class PluginManager(Module.Module):
         # 1. get Plugin files
         # 2. deserialize files
         # 3. store files
-        LOG.info("- PluginInject CALLED:")
+        rpc_name = whoami()
+        LOG.info("RPC " + rpc_name + " CALLED...")
         LOG.info(" - plugin name: " + plugin_name)
         LOG.debug(" - plugin dumped code:\n" + code)
 
@@ -97,7 +104,8 @@ class PluginManager(Module.Module):
         returnValue(result)
 
     def PluginStart(self, plugin_name):
-        LOG.info("- PluginStart CALLED...")
+        rpc_name = whoami()
+        LOG.info("RPC " + rpc_name + " CALLED...")
 
         plugin_path = iotronic_home + "/plugins/" + plugin_name + ".py"
 
@@ -110,7 +118,7 @@ class PluginManager(Module.Module):
 
             worker = task.Worker(plugin_name)
             worker.setStatus("STARTED")
-            result = worker.checkStatus()
+            result = rpc_name + " result: " + worker.checkStatus()
 
             yield worker.start()
 
@@ -120,21 +128,24 @@ class PluginManager(Module.Module):
             LOG.warning("ERROR il file " + plugin_path + " non esiste!")
 
     def PluginStop(self):
-        LOG.info(" - PluginStop CALLED...")
+        rpc_name = whoami()
+        LOG.info("RPC " + rpc_name + " CALLED...")
         yield makeNothing()
         result = "plugin result: PluginStop!\n"
         LOG.info(result)
         returnValue(result)
 
     def PluginCall(self):
-        LOG.info(" - PluginCall CALLED...")
+        rpc_name = whoami()
+        LOG.info("RPC " + rpc_name + " CALLED...")
         yield makeNothing()
         result = "plugin result: PluginCall!\n"
         LOG.info(result)
         returnValue(result)
 
     def PluginRemove(self):
-        LOG.info(" - PluginRemove CALLED...")
+        rpc_name = whoami()
+        LOG.info("RPC " + rpc_name + " CALLED...")
         yield makeNothing()
         result = "plugin result: PluginRemove!\n"
         LOG.info(result)

@@ -16,6 +16,7 @@
 from datetime import datetime
 # from dateutil.tz import tzlocal
 import json
+import os
 
 from iotronic_lightningrod.config import iotronic_home
 
@@ -30,7 +31,7 @@ class Node(object):
     def __init__(self):
         self.iotronic_config = {}
 
-        self.node_config = {}
+        # self.node_config = {}
         self.name = None
         self.type = None
         self.status = None
@@ -39,6 +40,7 @@ class Node(object):
         self.agent = None
         self.mobile = None
         self.session = None
+        self.session_id = None
 
         self.wamp_config = None
         self.extra = {}
@@ -66,19 +68,21 @@ class Node(object):
 
         '''
 
+        # Load all settings.json file
         self.iotronic_config = self.loadConf()
 
         try:
             # STATUS OPERATIVE
-            self.node_config = self.iotronic_config['iotronic']['node']
-            self.uuid = self.node_config['uuid']
-            self.token = self.node_config['token']
-            self.name = self.node_config['name']
-            self.status = self.node_config['status']
-            self.type = self.node_config['type']
-            self.mobile = self.node_config['mobile']
-            self.extra = self.node_config['extra']
-            self.created_at = self.node_config['created_at']
+            node_config = self.iotronic_config['iotronic']['node']
+            self.uuid = node_config['uuid']
+            self.token = node_config['token']
+            self.name = node_config['name']
+            self.status = node_config['status']
+            self.type = node_config['type']
+            self.mobile = node_config['mobile']
+            self.extra = node_config['extra']
+            self.agent = node_config['agent']
+            self.created_at = node_config['created_at']
             self.updated_at = self.getTimestamp()  # self.node_config['updated_at']
 
             self.extra = self.iotronic_config['iotronic']['extra']
@@ -86,22 +90,22 @@ class Node(object):
             LOG.info('Node settings:')
             LOG.info(' - token: ' + str(self.token))
             LOG.info(' - uuid: ' + str(self.uuid))
+            LOG.debug(json.dumps(node_config, indent=4))
             print('Node settings:')
-            """
-            print(' - token: ' + str(self.token))
-            print(' - uuid: ' + str(self.uuid))
-            """
+            print(json.dumps(node_config, indent=4))
 
             self.getWampAgent(self.iotronic_config)
 
-            print(json.dumps(self.node_config, indent=4))
-
-        except Exception:
+        except Exception as err:
             # STATUS REGISTERED
-            self.token = self.node_config['token']
-            LOG.info('First registration node settings: ')
-            LOG.info(' - token: ' + str(self.token))
-            self.getWampAgent(self.iotronic_config)
+            try:
+                self.token = node_config['token']
+                LOG.info('First registration node settings: ')
+                LOG.info(' - token: ' + str(self.token))
+                self.getWampAgent(self.iotronic_config)
+            except Exception as err:
+                LOG.error("Wrong token: " + str(err))
+                os._exit(1)
 
     def getWampAgent(self, config):
         '''This method gets and sets the WAMP Node attributes from the conf file.

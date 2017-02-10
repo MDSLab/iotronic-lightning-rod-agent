@@ -30,6 +30,7 @@ from oslo_log import log as logging
 # MODULES imports
 import inspect
 import json
+import os
 import pkg_resources
 from stevedore import extension
 import sys
@@ -83,7 +84,6 @@ CONF.register_opts(device_opts, 'device')
 
 
 def moduleReloadInfo(session):
-    # LOG.debug(" - RPC obj " + str(RPC))
 
     for mod in RPC:
         LOG.debug("- Module reloaded: " + str(mod))
@@ -101,7 +101,7 @@ def moduleWampRegister(session, meth_list):
             LOG.info(" - " + str(meth[0]))
             # LOG.debug(" --> " + str(meth[1]))
             rpc_addr = u'iotronic.' + node.uuid + '.' + meth[0]
-            LOG.debug(" --> " + str(rpc_addr))
+            # LOG.debug(" --> " + str(rpc_addr))
             session.register(inlineCallbacks(meth[1]), rpc_addr)
 
     LOG.info("Procedures registered.")
@@ -140,7 +140,6 @@ def modulesLoader(session):
 
             # print(ext.name)
 
-            # if (ext.name == 'gpio') & (CONF.device.type == 'server'):
             if (ext.name == 'gpio') & (node.type == 'server'):
                 print('- GPIO module disabled for laptop devices')
 
@@ -154,7 +153,6 @@ def modulesLoader(session):
                 global RPC
                 RPC[mod.name] = meth_list
 
-                # print len(meth_list)
                 if len(meth_list) == 1:  # there is only the "__init__" method of the python module
 
                     LOG.info(" - No RPC to register for " + str(ext.name) + " module!")
@@ -175,22 +173,29 @@ class WampFrontend(ApplicationSession):
 
         global SESSION
         SESSION = self
-        node.session = SESSION
 
-        LOG.info("Joined in WAMP server: session ready!")
-        print("WAMP: \n - status: session ready!")
+        node.session = self
+        node.session_id = details.session
+
         # print(" - session: " + str(details))
 
         # if (reconnection is False) | (node.status == "registered"):
         if reconnection is False:
+            LOG.info("Joined in WAMP server:")
+            print("WAMP:")
+            print (" - session ID: " + str(details.session))
+            LOG.debug(" - session ID: " + str(details.session))
+            print (json.dumps(node.wamp_config, indent=4))
 
             LOG.info("Lightning-rod initialization starting...")
-            print (" - session ID: " + str(details.session))
-            print (" - agent endpoint:\n" + json.dumps(node.wamp_config, indent=4))
 
             if node.uuid is None:
 
-                # FIRST NODE REGISTRAION
+                # FIRST NODE REGISTRAION:
+                # If in the LR configuration file there is not the Node UUID specified it means
+                # the node is a new one and it has to call Iotronic in order to complete the
+                # registration
+
                 try:
 
                     LOG.debug("Node needs to be registered to Iotronic...")
@@ -200,26 +205,33 @@ class WampFrontend(ApplicationSession):
 
                     node.setConf(res)
 
+                    # We need to disconnect the client from the registration-agent in
+                    # order to reconnect to the WAMP agent assigned by Iotronic
+                    # at the provisioning stage
                     self.disconnect()
 
                 except Exception as e:
                     LOG.warning("Board registration call error: {0}".format(e))
-                    exit()
+                    ByeLogo()
+                    os._exit(1)
 
             else:
 
                 # AFTER FIRST NODE REGISTRAION
 
                 if node.status == "registered":
-                    message = "\n\n\n !!! SELF RECONNECTION AFTER REGISTRATION !!!\n\n\n"
-                    LOG.info(message)
-                    print(message)
+                    # In this case we manage the first reconnection after the provisioning phase:
+                    # at this stage LR relaods the new configuration provided by Iotronic and
+                    # set its status to "operative"
+                    LOG.info("\n\n\nNode is becoming operative...\n\n\n")
                     node.loadSettings()
                     node.updateStatus("operative")
 
+                # After the WAMP connection stage LR will contact its WAMP agent
+                # and load the enabled modules
                 try:
 
-                    res = yield self.call(u'stack4things.register_uuid',
+                    res = yield self.call(str(node.agent) + '.stack4things.register_uuid',
                                           uuid=node.uuid, session=details.session)
 
                     # LOADING NODE MODULES
@@ -229,11 +241,14 @@ class WampFrontend(ApplicationSession):
 
                     except Exception as e:
                         LOG.warning("WARNING - Could not register procedures: {0}".format(e))
-                        exit()
+                        ByeLogo()
+                        os._exit(1)
 
                 except Exception as e:
                     LOG.warning("Board connection call error: {0}".format(e))
-                    exit()
+                    print("Board connection call error: {0}".format(e))
+                    ByeLogo()
+                    os._exit(1)
 
         else:
             yield moduleReloadInfo(self)
@@ -255,13 +270,17 @@ class WampClientFactory(websocket.WampWebSocketClientFactory, ReconnectingClient
 
     def clientConnectionLost(self, connector, reason):
         LOG.warning("Wamp Connection Lost.")
+        print("Wamp Connection Lost.")
 
         global reconnection
-        print("\nWAMP connection lost:\n- reconnection status " + str(reconnection))
-
         if (reconnection is False) & (node.status != "registered"):
             reconnection = True
-            print("- reconnection set to " + str(reconnection))
+            # print("- reconnection set to " + str(reconnection))
+        else:
+            LOG.debug("Please wait for node configuration.")
+
+        LOG.debug("Reconnecting...")
+        print("Reconnecting...\n")
 
         ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
 
@@ -269,17 +288,13 @@ class WampClientFactory(websocket.WampWebSocketClientFactory, ReconnectingClient
 class WampManager(object):
     def __init__(self, wamp_conf):
 
-        # component_config = types.ComponentConfig(realm=unicode(CONF.wamp.wamp_realm))
         component_config = types.ComponentConfig(realm=unicode(wamp_conf['realm']))
         session_factory = wamp.ApplicationSessionFactory(config=component_config)
         session_factory.session = WampFrontend
 
-        # transport_factory = WampClientFactory(session_factory, url=CONF.wamp.wamp_transport_url)
         transport_factory = WampClientFactory(session_factory, url=wamp_conf['url'])
         transport_factory.autoPingInterval = 1
         transport_factory.autoPingTimeout = 1
-
-        # LOG.debug("wamp url: %s wamp realm: %s", wamp_conf['url'], wamp_conf['realm'])
 
         websocket.connectWS(transport_factory)
 
@@ -309,8 +324,6 @@ def LogoLR():
     print ('##############################')
     print ('  Stack4Things Lightning-rod')
     print ('##############################')
-    print ('Info:')
-    print (' - Logs: /var/log/s4t-lightning-rod.log')
 
 
 class LightningRod(object):
@@ -327,8 +340,10 @@ class LightningRod(object):
         global node
         node = Node()
 
+        print ('Info:')
+        print (' - Logs: /var/log/s4t-lightning-rod.log')
         current_time = node.getTimestamp()
-        LOG.info(" - Current time: " + current_time)
+        LOG.info("Current time: " + current_time)
         print (" - Current time: " + current_time)
 
         w = WampManager(node.wamp_config)

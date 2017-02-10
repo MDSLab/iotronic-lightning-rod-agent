@@ -16,22 +16,15 @@
 
 import imp
 import inspect
-from iotronic_lightningrod.config import package_path
-from iotronic_lightningrod.modules import Module
 import os
-
 from twisted.internet.defer import inlineCallbacks
+
+from iotronic_lightningrod.config import package_path
+from iotronic_lightningrod.lightningrod import SESSION
+from iotronic_lightningrod.modules import Module
 
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
-
-"""
-# OSLO imports
-from oslo_config import cfg
-CONF = cfg.CONF
-"""
-
-from iotronic_lightningrod.lightningrod import SESSION
 
 
 def deviceWampRegister(dev_meth_list, node):
@@ -39,12 +32,10 @@ def deviceWampRegister(dev_meth_list, node):
 
     for meth in dev_meth_list:
 
-        # print meth[0]
         if (meth[0] != "__init__"):  # We don't considere the __init__ method
             LOG.info(" - " + str(meth[0]))
-            # SESSION.register(inlineCallbacks(meth[1]), u'board.' + meth[0])
             rpc_addr = u'iotronic.' + node.uuid + '.' + meth[0]
-            LOG.debug(" --> " + str(rpc_addr))
+            # LOG.debug(" --> " + str(rpc_addr))
             SESSION.register(inlineCallbacks(meth[1]), rpc_addr)
 
             LOG.info(" - DEVICE RPC function of " + meth[0] + " registered!")
@@ -57,12 +48,11 @@ class DeviceManager(Module.Module):
         # Module declaration
         super(DeviceManager, self).__init__("DeviceManager", node)
 
-        device_type = node.type  # CONF.device.type
+        device_type = node.type
 
         path = package_path + "/devices/" + device_type + ".py"
 
         if os.path.exists(path):
-            # LOG.debug("Device module path: " + path)
 
             device_module = imp.load_source("device", path)
 

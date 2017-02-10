@@ -1,6 +1,7 @@
 CHANGES
 =======
 
+* Registration management updated; new RPCs methods to manage Iotronic nodes: inject configuration, destroy node
 * cleaning egg info
 * Registration management first approach completed
 * fixed uuid configuration checks

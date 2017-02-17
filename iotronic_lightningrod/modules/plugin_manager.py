@@ -38,21 +38,30 @@ def whoami():
     return inspect.stack()[1][3]
 
 
+PLUGINS_THRS = {}
+
+
 def createPlugin(plugin_name, code):
 
     ser = PluginSerializer.ObjectSerializer()
-    loaded = ser.deserialize_entity({}, code)
+    #loaded = ser.deserialize_entity({}, code)
+    loaded = ser.deserialize_entity(code)
     LOG.debug("- plugin loaded code:\n" + loaded)
     LOG.debug("- plugin creation starting...")
-    plugin_path = iotronic_home + "/plugins/" + plugin_name + ".py"
 
-    with open(plugin_path, "w") as pluginfile:
+    plugin_path = iotronic_home + "/plugins/" + plugin_name + "/"
+    plugin_filename = plugin_path + plugin_name + ".py"
+
+    if not os.path.exists(plugin_path):
+        os.makedirs(plugin_path)
+
+    with open(plugin_filename, "w") as pluginfile:
         pluginfile.write(loaded)
 
 
 class PluginManager(Module.Module):
 
-    def __init__(self, node):
+    def __init__(self, node, session):
 
         # Module declaration
         super(PluginManager, self).__init__("PluginManager", node)
@@ -94,11 +103,12 @@ class PluginManager(Module.Module):
         LOG.debug(" - plugin dumped code:\n" + code)
 
         t = threading.Thread(target=createPlugin, args=(plugin_name, code,))
+
         t.start()
 
         yield t.join()
 
-        result = "PluginInject result: injected!\n"
+        result = rpc_name + " result: INJECTED"
         LOG.info(result)
 
         returnValue(result)
@@ -107,32 +117,40 @@ class PluginManager(Module.Module):
         rpc_name = whoami()
         LOG.info("RPC " + rpc_name + " CALLED...")
 
-        plugin_path = iotronic_home + "/plugins/" + plugin_name + ".py"
+        plugin_filename = iotronic_home + "/plugins/" + plugin_name + "/" + plugin_name + ".py"
 
-        LOG.debug(" - Plugin path: " + plugin_path)
+        LOG.debug(" - Plugin path: " + plugin_filename)
 
-        if os.path.exists(plugin_path):
+        if os.path.exists(plugin_filename):
 
-            task = imp.load_source("plugin", plugin_path)
+            task = imp.load_source("plugin", plugin_filename)
             LOG.info("Plugin " + plugin_name + " imported!")
 
             worker = task.Worker(plugin_name)
-            worker.setStatus("STARTED")
-            result = rpc_name + " result: " + worker.checkStatus()
+
+            PLUGINS_THRS[plugin_name] = worker
+            LOG.debug("Starting plugin " + str(worker))
 
             yield worker.start()
+
+            result = worker.complete(rpc_name, "STARTED")
 
             returnValue(result)
 
         else:
-            LOG.warning("ERROR il file " + plugin_path + " non esiste!")
+            LOG.warning("ERROR il file " + plugin_filename + " non esiste!")
 
-    def PluginStop(self):
+    def PluginStop(self, plugin_name):
         rpc_name = whoami()
         LOG.info("RPC " + rpc_name + " CALLED...")
-        yield makeNothing()
-        result = "plugin result: PluginStop!\n"
-        LOG.info(result)
+
+        worker = PLUGINS_THRS[plugin_name]
+        LOG.debug("Stopping plugin " + str(worker))
+
+        yield worker.stop()
+
+        result = worker.complete(rpc_name, "KILLED")
+
         returnValue(result)
 
     def PluginCall(self):

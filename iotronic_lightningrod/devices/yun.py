@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+# Linino references: http://wiki.linino.org/doku.php?id=wiki:lininoio_sysfs
 
 from twisted.internet.defer import returnValue
 
@@ -23,19 +24,42 @@ from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
 
-def makeNothing():
-    pass
-
-
 class System(Device.Device):
+
     def __init__(self):
         super(System, self).__init__("yun")
 
-        yun.YunGpio().EnableGPIO()
+        self.gpio = yun.YunGpio()
+
+        self.gpio.EnableGPIO()
 
     def testLED(self):
         LOG.info(" - testLED CALLED...")
-        yield makeNothing()
-        result = "testLED result!\n"
+
+        yield self.gpio.blinkLed()
+
+        result = "testLED: LED blinking!\n"
         LOG.info(result)
         returnValue(result)
+
+    def setGPIOs(self, Dpin, direction, value):
+
+        LOG.info(" - setGPIOs CALLED... digital pin " + Dpin + " (GPIO n. " + self.gpio.MAPPING[Dpin] + ")")
+
+        result = yield self.gpio._setGPIOs(Dpin, direction, value)
+        LOG.info(result)
+        returnValue(result)
+
+
+    def readVoltage(self, Apin):
+        """To read the voltage applied on the pin A0,A1,A2,A3,A4,A5
+
+        """
+        LOG.info(" - readVoltage CALLED... reading pin " + Apin)
+
+        result = yield "read voltage for " + Apin + " pin: " + self.gpio._readVoltage(Apin)
+        LOG.info(result)
+        returnValue(result)
+
+
+

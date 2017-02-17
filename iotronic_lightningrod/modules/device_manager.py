@@ -28,22 +28,22 @@ LOG = logging.getLogger(__name__)
 
 
 def deviceWampRegister(dev_meth_list, node):
-    LOG.info("DeviceWampRegister:")
+    LOG.info(" - " + node.type + " device registering RPCs:")
 
     for meth in dev_meth_list:
 
         if (meth[0] != "__init__"):  # We don't considere the __init__ method
-            LOG.info(" - " + str(meth[0]))
+            #LOG.info(" - " + str(meth[0]))
             rpc_addr = u'iotronic.' + node.uuid + '.' + meth[0]
             # LOG.debug(" --> " + str(rpc_addr))
             SESSION.register(inlineCallbacks(meth[1]), rpc_addr)
 
-            LOG.info(" - DEVICE RPC function of " + meth[0] + " registered!")
+            LOG.info("  --> " + str(meth[0]) + " registered!")
 
 
 class DeviceManager(Module.Module):
 
-    def __init__(self, node):
+    def __init__(self, node, session):
 
         # Module declaration
         super(DeviceManager, self).__init__("DeviceManager", node)

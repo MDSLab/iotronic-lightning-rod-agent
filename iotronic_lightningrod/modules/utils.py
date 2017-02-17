@@ -56,7 +56,7 @@ def refresh_stevedore(namespace=None):
 
 class Utility(Module.Module):
 
-    def __init__(self, node):
+    def __init__(self, node, session):
         super(Utility, self).__init__("Utility", node)
 
     def hello(self, client_name, message):

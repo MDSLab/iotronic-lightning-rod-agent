@@ -36,7 +36,7 @@ class Node(object):
         self.type = None
         self.status = None
         self.uuid = None
-        self.token = None
+        self.code = None
         self.agent = None
         self.mobile = None
         self.session = None
@@ -75,7 +75,7 @@ class Node(object):
             # STATUS OPERATIVE
             node_config = self.iotronic_config['iotronic']['node']
             self.uuid = node_config['uuid']
-            self.token = node_config['token']
+            self.code = node_config['code']
             self.name = node_config['name']
             self.status = node_config['status']
             self.type = node_config['type']
@@ -83,28 +83,27 @@ class Node(object):
             self.extra = node_config['extra']
             self.agent = node_config['agent']
             self.created_at = node_config['created_at']
-            self.updated_at = self.getTimestamp()  # self.node_config['updated_at']
+            self.updated_at = node_config['updated_at']  # self.getTimestamp()
 
             self.extra = self.iotronic_config['iotronic']['extra']
 
             LOG.info('Node settings:')
-            LOG.info(' - token: ' + str(self.token))
+            LOG.info(' - code: ' + str(self.code))
             LOG.info(' - uuid: ' + str(self.uuid))
-            LOG.debug(json.dumps(node_config, indent=4))
-            print('Node settings:')
-            print(json.dumps(node_config, indent=4))
+            #LOG.debug(" - conf:\n" + json.dumps(node_config, indent=4))
 
             self.getWampAgent(self.iotronic_config)
 
         except Exception as err:
+            LOG.warning("settings.json file exception: " + str(err))
             # STATUS REGISTERED
             try:
-                self.token = node_config['token']
+                self.code = node_config['code']
                 LOG.info('First registration node settings: ')
-                LOG.info(' - token: ' + str(self.token))
+                LOG.info(' - code: ' + str(self.code))
                 self.getWampAgent(self.iotronic_config)
             except Exception as err:
-                LOG.error("Wrong token: " + str(err))
+                LOG.error("Wrong code: " + str(err))
                 os._exit(1)
 
     def getWampAgent(self, config):
@@ -124,11 +123,13 @@ class Node(object):
                           "Please check settings.json WAMP configuration...Bye!")
                 exit()
 
-        LOG.debug(' - url: ' + str(self.wamp_config['url']))
-        LOG.debug(' - realm: ' + str(self.wamp_config['realm']))
+        LOG.info(' - agent: ' + str(self.agent))
+        LOG.info(' - url: ' + str(self.wamp_config['url']))
+        LOG.info(' - realm: ' + str(self.wamp_config['realm']))
+        #LOG.debug("- conf:\n" + json.dumps(self.wamp_config, indent=4))
 
     def setConf(self, conf):
-        print("NEW CONFIGURATION:\n" + str(json.dumps(conf, indent=4)))
+        #LOG.info("\nNEW CONFIGURATION:\n" + str(json.dumps(conf, indent=4)))
 
         with open(SETTINGS, 'w') as f:
             json.dump(conf, f, indent=4)
@@ -139,7 +140,7 @@ class Node(object):
     def updateStatus(self, status):
         self.iotronic_config['iotronic']['node']["status"] = status
 
-        self.iotronic_config['iotronic']['node']["updated_at"] = self.updated_at
+        #self.iotronic_config['iotronic']['node']["updated_at"] = self.updated_at
 
         with open(SETTINGS, 'w') as f:
             json.dump(self.iotronic_config, f, indent=4)

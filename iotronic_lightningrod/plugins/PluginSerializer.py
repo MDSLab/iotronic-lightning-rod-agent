@@ -14,13 +14,13 @@
 #    under the License.
 
 import cPickle as pickle
-import oslo_messaging
+#import oslo_messaging
 
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
-
-class ObjectSerializer(oslo_messaging.NoOpSerializer):
+#class ObjectSerializer(oslo_messaging.NoOpSerializer):
+class ObjectSerializer(object):
     """A PluginObject-aware Serializer.
 
     This implements the Oslo Serializer interface and provides the
@@ -30,7 +30,8 @@ class ObjectSerializer(oslo_messaging.NoOpSerializer):
     and RpcDispatcher objects.
     """
 
-    def serialize_entity(self, context, entity):
+    #def serialize_entity(self, context, entity):
+    def serialize_entity(self, entity):
 
         dumped = pickle.dumps(entity, 0)
 
@@ -38,7 +39,8 @@ class ObjectSerializer(oslo_messaging.NoOpSerializer):
 
         return dumped
 
-    def deserialize_entity(self, context, entity):
+    #def deserialize_entity(self, context, entity):
+    def deserialize_entity(self, entity):
 
         loaded = pickle.loads(str(entity))
 

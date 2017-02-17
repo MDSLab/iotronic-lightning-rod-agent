@@ -1,7 +1,7 @@
 {
   "iotronic": {
     "node": {
-      "token": "<REGISTRATION-TOKEN>"
+      "code": "<REGISTRATION-TOKEN>"
     },
     "wamp": {
       "registration-agent": {

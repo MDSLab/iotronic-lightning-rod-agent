@@ -24,7 +24,7 @@ LOG = logging.getLogger(__name__)
 class ServerGpio(Gpio.Gpio):
     def __init__(self):
         super(ServerGpio, self).__init__("yun")
-        LOG.info("Server gpio module inporting...")
+        LOG.info("Server gpio module importing...")
 
     # Enable GPIO
     def EnableGPIO(self):

@@ -36,7 +36,6 @@ class Module(object):
         self.node = node
 
         LOG.info("Loading module " + self.name + "...")
-        print('- ' + self.name)
 
     """
     @abc.abstractmethod

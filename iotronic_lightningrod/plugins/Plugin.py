@@ -51,11 +51,15 @@ class Plugin(threading.Thread):
 
         self.setStatus("INITED")
 
+        self._is_running = True
+
     @abc.abstractmethod
     def run(self):
         """RUN method where to implement the user's plugin logic
 
         """
+    def stop(self):
+        self._is_running = False
 
     def Done(self):
         self.setStatus("COMPLETED")
@@ -79,3 +83,10 @@ class Plugin(threading.Thread):
             LOG.debug("\nREST REQUEST:\n" + send)
             LOG.debug("\nREST RESPONSE:\n" + result)
         return send
+
+    def complete(self, rpc_name, result):
+        self.setStatus(result)
+        result = rpc_name + " result: " + self.checkStatus()
+        LOG.info(result)
+
+        return result

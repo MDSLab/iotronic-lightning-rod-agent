@@ -37,9 +37,6 @@ class Module(object):
 
         LOG.info("Loading module " + self.name + "...")
 
-    """
     @abc.abstractmethod
-    def test(self):
-        #Main plugin method.
-
-    """
+    def finalize(self):
+        pass

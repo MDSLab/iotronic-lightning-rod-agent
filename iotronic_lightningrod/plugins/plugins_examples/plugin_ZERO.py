@@ -1,5 +1,5 @@
-# Copyright 2011 OpenStack Foundation
-# All Rights Reserved.
+# Copyright 2017 MDSLAB - University of Messina
+#    All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -24,9 +24,8 @@ LOG = logging.getLogger(__name__)
 
 
 class Worker(Plugin.Plugin):
-    def __init__(self, name):
-        super(Worker, self).__init__(name)
+    def __init__(self, name, is_running):
+        super(Worker, self).__init__(name, is_running)
 
     def run(self):
         LOG.info("Plugin process completed!")
-        # self.Done()

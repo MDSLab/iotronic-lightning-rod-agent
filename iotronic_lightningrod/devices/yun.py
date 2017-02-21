@@ -50,7 +50,6 @@ class System(Device.Device):
         LOG.info(result)
         returnValue(result)
 
-
     def readVoltage(self, Apin):
         """To read the voltage applied on the pin A0,A1,A2,A3,A4,A5
 
@@ -60,6 +59,3 @@ class System(Device.Device):
         result = yield "read voltage for " + Apin + " pin: " + self.gpio._readVoltage(Apin)
         LOG.info(result)
         returnValue(result)
-
-
-

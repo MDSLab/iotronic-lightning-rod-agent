@@ -1,5 +1,5 @@
-# Copyright 2011 OpenStack Foundation
-# All Rights Reserved.
+# Copyright 2017 MDSLAB - University of Messina
+#    All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -13,15 +13,21 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from iotronic_lightningrod.plugins import Plugin
 
-import os
-import pkg_resources
+from oslo_log import log as logging
+LOG = logging.getLogger(__name__)
 
-dist = pkg_resources.get_distribution(__package__)
-entry_points_name = os.path.join(dist.location, dist.egg_name()) + ".egg-info/entry_points.txt"
+# User imports
+import time
 
-# Iotronic python package folder
-package_path = os.path.join(dist.location, __package__)
 
-# Iotronic home folder
-iotronic_home = "/opt/stack4things/iotronic"
+class Worker(Plugin.Plugin):
+    def __init__(self, name, is_running):
+        super(Worker, self).__init__(name, is_running)
+
+    def run(self):
+        LOG.info("Plugin " + self.name + " starting...")
+        while(self._is_running):
+                time.sleep(1)
+                print("CIAO")

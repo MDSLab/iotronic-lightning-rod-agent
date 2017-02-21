@@ -59,6 +59,9 @@ class Utility(Module.Module):
     def __init__(self, node, session):
         super(Utility, self).__init__("Utility", node)
 
+    def finalize(self):
+        pass
+
     def hello(self, client_name, message):
         import random
         s = random.uniform(0.5, 3.0)

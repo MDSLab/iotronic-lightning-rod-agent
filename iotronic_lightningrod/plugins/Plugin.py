@@ -16,7 +16,6 @@
 
 import abc
 import httplib2
-from iotronic_lightningrod.config import package_path
 import json
 import six
 import threading
@@ -40,18 +39,16 @@ def sendNotification(msg=None):
 @six.add_metaclass(abc.ABCMeta)
 class Plugin(threading.Thread):
 
-    def __init__(self, name):
+    def __init__(self, name, _is_running):
         threading.Thread.__init__(self)
         # self.setDaemon(1)
         self.setName("Plugin " + str(self.name))  # Set thread name
 
         self.name = name
-        self.path = package_path + "/plugins/" + self.name + ".py"
+        # self.path = package_path + "/plugins/" + self.name + ".py"
         self.status = "None"
-
         self.setStatus("INITED")
-
-        self._is_running = True
+        self._is_running = _is_running
 
     @abc.abstractmethod
     def run(self):
@@ -67,12 +64,12 @@ class Plugin(threading.Thread):
         self.checkStatus()
 
     def checkStatus(self):
-        LOG.debug("Plugin " + self.name + " check status: " + self.status)
+        # LOG.debug("Plugin " + self.name + " check status: " + self.status)
         return self.status
 
     def setStatus(self, status):
         self.status = status
-        LOG.debug("Plugin " + self.name + " changed status: " + self.status)
+        # LOG.debug("Plugin " + self.name + " changed status: " + self.status)
 
     def sendRequest(self, url=None, headers={}, data=None, verbose=False):
         http = httplib2.Http()
@@ -86,7 +83,7 @@ class Plugin(threading.Thread):
 
     def complete(self, rpc_name, result):
         self.setStatus(result)
-        result = rpc_name + " result: " + self.checkStatus()
+        result = rpc_name + " result for " + self.name + ": " + self.checkStatus()
         LOG.info(result)
 
         return result

@@ -158,8 +158,6 @@ OPERATIVE = 'operative'
 MAINTENANCE = 'maintenance'
 REGISTERED = 'registered'
 
-
-
 ##############
 # Power states
 ##############

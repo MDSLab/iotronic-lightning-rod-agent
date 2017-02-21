@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 import imp
 import inspect
 import os
@@ -33,7 +32,7 @@ def deviceWampRegister(dev_meth_list, node):
     for meth in dev_meth_list:
 
         if (meth[0] != "__init__"):  # We don't considere the __init__ method
-            #LOG.info(" - " + str(meth[0]))
+            # LOG.info(" - " + str(meth[0]))
             rpc_addr = u'iotronic.' + node.uuid + '.' + meth[0]
             # LOG.debug(" --> " + str(rpc_addr))
             SESSION.register(inlineCallbacks(meth[1]), rpc_addr)
@@ -66,3 +65,6 @@ class DeviceManager(Module.Module):
 
         else:
             LOG.warning("Device " + device_type + " not supported!")
+
+    def finalize(self):
+        pass

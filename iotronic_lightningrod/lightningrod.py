@@ -42,8 +42,6 @@ from config import entry_points_name
 from iotronic_lightningrod.Node import Node
 
 
-
-
 # Global variables
 LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
@@ -101,7 +99,8 @@ def moduleReloadInfo(session):
 def moduleWampRegister(session, meth_list):
 
     for meth in meth_list:
-        if (meth[0] != "__init__"):  # We don't considere the __init__ method
+        # We don't considere the __init__ and finalize methods
+        if (meth[0] != "__init__") & (meth[0] != "finalize"):
 
             # LOG.debug(" --> " + str(meth[1]))
             rpc_addr = u'iotronic.' + node.uuid + '.' + meth[0]
@@ -144,7 +143,7 @@ def modulesLoader(session):
 
         for ext in modules.extensions:
 
-            #print(ext.name)
+            # print(ext.name)
 
             if (ext.name == 'gpio') & (node.type == 'server'):
                 print('- GPIO module disabled for laptop devices')
@@ -159,19 +158,19 @@ def modulesLoader(session):
                 global RPC
                 RPC[mod.name] = meth_list
 
-                if len(meth_list) == 1:  # there is only the "__init__" method of the python module
+                if len(meth_list) == 2:  # there is only the "__init__" method of the python module
 
                     LOG.debug(" - No RPC to register for " + str(ext.name) + " module!")
 
                 else:
-
                     LOG.debug(" - RPC list of " + str(mod.name) + ":")
-
                     moduleWampRegister(SESSION, meth_list)
 
-        LOG.info("Modules loaded.")
-        LOG.info("\n\nListening...")
+                # Call the finalize procedure for each module
+                mod.finalize()
 
+        LOG.info("Lightning-rod modules loaded.")
+        LOG.info("\n\nListening...")
 
 
 class WampFrontend(ApplicationSession):
@@ -296,8 +295,6 @@ class WampClientFactory(websocket.WampWebSocketClientFactory, ReconnectingClient
             wampConnect(node.wamp_config)
 
 
-
-
 def wampConnect(wamp_conf):
 
     component_config = types.ComponentConfig(realm=unicode(wamp_conf['realm']))
@@ -309,7 +306,7 @@ def wampConnect(wamp_conf):
     transport_factory.autoPingTimeout = 1
 
     connector = websocket.connectWS(transport_factory)
-    #print connector
+    # print connector
 
     LOG.info("WAMP status:")
     LOG.info(" - establishing connection to " + str(connector.getDestination()))
@@ -324,14 +321,12 @@ class WampManager(object):
         LOG.info(" - starting WAMP server...")
         reactor.run()
 
-
-
         # PROVVISORIO --------------------------------------------------------------
         from subprocess import call
         LOG.debug("Unmounting...")
 
         try:
-            mountPoint="/opt/BBB"
+            mountPoint = "/opt/BBB"
             # errorCode = self.libc.umount(mountPoint, None)
             errorCode = call(["umount", "-l", mountPoint])
 
@@ -339,8 +334,8 @@ class WampManager(object):
 
         except Exception as msg:
             result = "Unmounting error:", msg
+            LOG.debug(result)
         # --------------------------------------------------------------------------
-
 
     def stop(self):
         LOG.info("Stopping WAMP-agent server...")
@@ -359,7 +354,6 @@ def LogoLR():
     LOG.info('##############################')
 
 
-
 class LightningRod(object):
 
     def __init__(self):
@@ -376,8 +370,8 @@ class LightningRod(object):
         global node
         node = Node()
 
-        LOG.info ('Info:')
-        LOG.info (' - Logs: /var/log/s4t-lightning-rod.log')
+        LOG.info('Info:')
+        LOG.info(' - Logs: /var/log/s4t-lightning-rod.log')
         current_time = node.getTimestamp()
         LOG.info(" - Current time: " + current_time)
 

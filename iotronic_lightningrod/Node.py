@@ -90,7 +90,7 @@ class Node(object):
             LOG.info('Node settings:')
             LOG.info(' - code: ' + str(self.code))
             LOG.info(' - uuid: ' + str(self.uuid))
-            #LOG.debug(" - conf:\n" + json.dumps(node_config, indent=4))
+            # LOG.debug(" - conf:\n" + json.dumps(node_config, indent=4))
 
             self.getWampAgent(self.iotronic_config)
 
@@ -126,10 +126,10 @@ class Node(object):
         LOG.info(' - agent: ' + str(self.agent))
         LOG.info(' - url: ' + str(self.wamp_config['url']))
         LOG.info(' - realm: ' + str(self.wamp_config['realm']))
-        #LOG.debug("- conf:\n" + json.dumps(self.wamp_config, indent=4))
+        # LOG.debug("- conf:\n" + json.dumps(self.wamp_config, indent=4))
 
     def setConf(self, conf):
-        #LOG.info("\nNEW CONFIGURATION:\n" + str(json.dumps(conf, indent=4)))
+        # LOG.info("\nNEW CONFIGURATION:\n" + str(json.dumps(conf, indent=4)))
 
         with open(SETTINGS, 'w') as f:
             json.dump(conf, f, indent=4)
@@ -140,7 +140,7 @@ class Node(object):
     def updateStatus(self, status):
         self.iotronic_config['iotronic']['node']["status"] = status
 
-        #self.iotronic_config['iotronic']['node']["updated_at"] = self.updated_at
+        # self.iotronic_config['iotronic']['node']["updated_at"] = self.updated_at
 
         with open(SETTINGS, 'w') as f:
             json.dump(self.iotronic_config, f, indent=4)

@@ -15,11 +15,11 @@
 
 from __future__ import with_statement
 
-
 import errno
 import os
 from subprocess import call
 import threading
+from twisted.internet.defer import inlineCallbacks
 from twisted.internet.defer import returnValue
 
 # Iotronic imports
@@ -54,6 +54,9 @@ class VfsManager(Module.Module):
 
         libcPath = ctypes.util.find_library("c")
         self.libc = ctypes.CDLL(libcPath)
+
+    def finalize(self):
+        pass
 
     def mountLocal(self, mountSource, mountPoint):
 
@@ -159,23 +162,23 @@ class MounterRemote(threading.Thread):
 
         """
         try:
-            FUSE(FuseRemoteManager(self.mountSource, self.node.agent, self.session, self.boardRemote, self.agentRemote), self.mountPoint, nothreads=False, foreground=True)
+            FUSE(
+                FuseRemoteManager(self.mountSource, self.node.agent, self.session, self.boardRemote, self.agentRemote),
+                self.mountPoint, nothreads=False, foreground=True)
+
         except Exception as msg:
             LOG.error("Mounting FUSE error: " + str(msg))
 
 
-
-from twisted.internet.defer import inlineCallbacks
 @inlineCallbacks
 def makeCall(msg=None, agent=None, session=None):
-    rpc_addr = str(agent)+'.stack4things.echo'
+    rpc_addr = str(agent) + '.stack4things.echo'
     LOG.debug("VFS - I'm calling " + rpc_addr)
     try:
         res = yield session.call(rpc_addr, msg)
         LOG.info("NOTIFICATION " + str(res))
     except Exception as e:
         LOG.warning("NOTIFICATION error: {0}".format(e))
-
 
 
 class FuseRemoteManager(Operations):
@@ -188,8 +191,7 @@ class FuseRemoteManager(Operations):
         self.boardRemote = boardRemote
         self.agentRemote = agentRemote
 
-        makeCall("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU", self.agent, self.session)
-
+        makeCall("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU", self.agent, self.session)  # TEMPORARY
 
     def join_path(self, partial):
         if partial.startswith("/"):
@@ -197,7 +199,6 @@ class FuseRemoteManager(Operations):
         path = os.path.join(self.mountSource, partial)
         print(path)
         return path
-
 
     # Filesystem methods
     # ==================
@@ -306,13 +307,10 @@ class FuseRemoteManager(Operations):
         return self.flush(path, fh)
 
 
-
-
-
 class FuseManager(Operations):
+
     def __init__(self, mountSource):
         self.mountSource = mountSource
-
 
     def join_path(self, partial):
         if partial.startswith("/"):

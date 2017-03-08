@@ -1,4 +1,4 @@
-# Copyright 2011 OpenStack Foundation
+# Copyright 2017 MDSLAB - University of Messina
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -39,7 +39,7 @@ def sendNotification(msg=None):
 @six.add_metaclass(abc.ABCMeta)
 class Plugin(threading.Thread):
 
-    def __init__(self, name, _is_running):
+    def __init__(self, name, plugin_conf=None):
         threading.Thread.__init__(self)
         # self.setDaemon(1)
         self.setName("Plugin " + str(self.name))  # Set thread name
@@ -48,7 +48,10 @@ class Plugin(threading.Thread):
         # self.path = package_path + "/plugins/" + self.name + ".py"
         self.status = "None"
         self.setStatus("INITED")
-        self._is_running = _is_running
+        self._is_running = True
+        self.plugin_conf = plugin_conf
+
+        LOG.info("PLUGIN CONF: " + str(self.plugin_conf))
 
     @abc.abstractmethod
     def run(self):

@@ -1,4 +1,4 @@
-# Copyright 2011 OpenStack Foundation
+# Copyright 2017 MDSLAB - University of Messina
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -305,6 +305,13 @@ class FuseRemoteManager(Operations):
 
     def fsync(self, path, fdatasync, fh):
         return self.flush(path, fh)
+
+
+
+
+
+
+
 
 
 class FuseManager(Operations):

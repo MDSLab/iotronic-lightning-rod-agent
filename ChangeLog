@@ -1,6 +1,7 @@
 CHANGES
 =======
 
+* Developed new plugin management methods: stop, remove. VFS Manager under costruction. PluginSerializer: removede oslo.messagging serialization methods. Registration management updated
 * Registration management updated: multiple wamp server management; Updated YUN gpio management; Updated PluginManager methods; Updated VFS library for remote access
 * Registration management updated: multiple wamp agents added
 * Registration management updated; new RPCs methods to manage Iotronic nodes: inject configuration, destroy node

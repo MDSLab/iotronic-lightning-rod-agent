@@ -24,8 +24,8 @@ LOG = logging.getLogger(__name__)
 
 
 class Worker(Plugin.Plugin):
-    def __init__(self, name, is_running):
-        super(Worker, self).__init__(name, is_running)
+    def __init__(self, name, plugin_conf=None):
+        super(Worker, self).__init__(name, plugin_conf)
 
     def run(self):
-        LOG.info("Plugin process completed!")
+        LOG.info("Plugin " + self.name + " process completed!")

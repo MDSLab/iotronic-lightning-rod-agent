@@ -1,4 +1,4 @@
-# Copyright 2011 OpenStack Foundation
+# Copyright 2017 MDSLAB - University of Messina
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import absolute_import
 
 import imp
 import inspect
@@ -163,7 +164,8 @@ class PluginManager(Module.Module):
 
         returnValue(result)
 
-    def PluginStart(self, plugin_name):
+    def PluginStart(self, plugin_name, plugin_conf=None):
+
         rpc_name = getFuncName()
         LOG.info("RPC " + rpc_name + " CALLED for " + plugin_name + " plugin:")
 
@@ -176,9 +178,19 @@ class PluginManager(Module.Module):
 
         else:
 
-            plugin_filename = iotronic_home + "/plugins/" + plugin_name + "/" + plugin_name + ".py"
+            plugin_home = iotronic_home + "/plugins/" + plugin_name
+            plugin_filename = plugin_home + "/" + plugin_name + ".py"
+            plugin_conf_file = plugin_home + "/" + plugin_name + ".json"
 
             LOG.debug(" - Plugin path: " + plugin_filename)
+            LOG.debug(" - Plugin Config path: " + plugin_conf_file)
+
+            if plugin_conf != None:
+                with open(plugin_conf_file, 'w') as f:
+                    json.dump(plugin_conf, f, indent=4)
+
+                with open(plugin_conf_file) as conf:
+                    plugin_conf_loaded = json.load(conf)
 
             if os.path.exists(plugin_filename):
 
@@ -186,7 +198,10 @@ class PluginManager(Module.Module):
 
                 LOG.info("Plugin " + plugin_name + " imported!")
 
-                worker = task.Worker(plugin_name, True)
+                if plugin_conf != None:
+                    worker = task.Worker(plugin_name, plugin_conf_loaded)
+                else:
+                    worker = task.Worker(plugin_name)
 
                 PLUGINS_THRS[plugin_name] = worker
                 LOG.debug("Starting plugin " + str(worker))
@@ -250,19 +265,28 @@ class PluginManager(Module.Module):
         for plugin in enabledPlugins:
             try:
 
-                if plugin in PLUGINS_THRS:
+                if (plugin in PLUGINS_THRS) and (PLUGINS_THRS[plugin].isAlive()):
 
                     LOG.info(" - Plugin " + plugin + " already started!")
 
                 else:
                     LOG.info(" - Rebooting plugin " + plugin)
-                    plugin_filename = iotronic_home + "/plugins/" + plugin + "/" + plugin + ".py"
+
+                    plugin_home = iotronic_home + "/plugins/" + plugin
+                    plugin_filename = plugin_home + "/" + plugin + ".py"
+                    plugin_conf_file = plugin_home + "/" + plugin + ".json"
 
                     if os.path.exists(plugin_filename):
 
                         task = imp.load_source("plugin", plugin_filename)
 
-                        worker = task.Worker(plugin, True)
+                        if os.path.exists(plugin_conf_file):
+                            with open(plugin_conf_file) as conf:
+                                plugin_conf_loaded = json.load(conf)
+
+                            worker = task.Worker(plugin, plugin_conf_loaded)
+                        else:
+                            worker = task.Worker(plugin)
 
                         PLUGINS_THRS[plugin] = worker
                         LOG.info("   - Starting plugin " + str(worker))
@@ -292,7 +316,7 @@ class PluginManager(Module.Module):
 
         else:
 
-            result = " - " + rpc_name + " result for " + plugin_name + ": DEAD"
+            result = rpc_name + " result for " + plugin_name + ": DEAD"
             yield LOG.warning(result)
 
         returnValue(result)

@@ -5,6 +5,6 @@
 .tox/
 .idea/
 pep8_result.txt
-plugin_sme.py
+smartme.py
 settings.json
 setup.cfg.BKP

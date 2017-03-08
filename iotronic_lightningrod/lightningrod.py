@@ -1,4 +1,4 @@
-# Copyright 2011 OpenStack Foundation
+# Copyright 2017 MDSLAB - University of Messina
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -40,6 +40,7 @@ import sys
 # Iotronic imports
 from config import entry_points_name
 from iotronic_lightningrod.Node import Node
+from iotronic_lightningrod.wampmessage import WampMessage
 
 
 # Global variables
@@ -204,17 +205,35 @@ class WampFrontend(ApplicationSession):
                 try:
 
                     LOG.info(" - Node needs to be registered to Iotronic.")
-                    res = yield self.call(u'stack4things.register',
-                                          code=node.code, session=details.session)
-                    LOG.info(" - Board registration result: \n" + json.dumps(res, indent=4))
 
-                    node.setConf(res)
+                    res = yield self.call(u'stack4things.register', code=node.code, session=details.session)
 
-                    # We need to disconnect the client from the registration-agent in
-                    # order to reconnect to the WAMP agent assigned by Iotronic
-                    # at the provisioning stage
-                    LOG.info("\n\nDisconnecting from Registration Agent to load new settings...\n\n")
-                    self.disconnect()
+                    #LOG.info(" - Board registration result: \n" + json.dumps(res, indent=4))
+                    #LOG.info(" - Board registration result NO JSON: \n" + str(res))
+
+
+
+                    w_msg = WampMessage().deserialize(res)
+
+                    #LOG.info(" - Board registration result: \n" + json.loads(w_msg.message, indent=4))
+
+                    if (w_msg.result == "SUCCESS"):
+                        LOG.info("Registration authorized by Iotronic: " + str(w_msg.message))
+
+                        node.setConf(w_msg.message)
+
+                        # We need to disconnect the client from the registration-agent in
+                        # order to reconnect to the WAMP agent assigned by Iotronic
+                        # at the provisioning stage
+                        LOG.info("\n\nDisconnecting from Registration Agent to load new settings...\n\n")
+                        self.disconnect()
+
+
+                    else:
+                        LOG.error("Registration denied by Iotronic: " + str(w_msg.message))
+                        ByeLogo()
+                        os._exit(1)
+
 
                 except Exception as e:
                     LOG.warning(" - Board registration call error: {0}".format(e))
@@ -238,18 +257,30 @@ class WampFrontend(ApplicationSession):
                 # and load the enabled modules
                 try:
 
-                    res = yield self.call(str(node.agent) + '.stack4things.register_uuid',
-                                          uuid=node.uuid, session=details.session)
+                    res = yield self.call(str(node.agent) + '.stack4things.connection', uuid=node.uuid, session=details.session)
 
-                    # LOADING NODE MODULES
-                    try:
+                    w_msg=WampMessage().deserialize(res)
+                    #LOG.debug("Access information received: " + str(w_msg.result) + " - "+ str(w_msg.message))
 
-                        yield modulesLoader(self)
+                    if (w_msg.result == "SUCCESS"):
+                        LOG.info("Access granted to Iotronic: " + str(w_msg.message))
 
-                    except Exception as e:
-                        LOG.warning("WARNING - Could not register procedures: {0}".format(e))
+                        # LOADING NODE MODULES
+                        try:
+
+                            yield modulesLoader(self)
+
+                        except Exception as e:
+                            LOG.warning("WARNING - Could not register procedures: {0}".format(e))
+                            ByeLogo()
+                            os._exit(1)
+
+                    else:
+                        LOG.error("Access denied to Iotronic: " + str(w_msg.message))
                         ByeLogo()
                         os._exit(1)
+
+
 
                 except Exception as e:
                     LOG.warning("Board connection call error: {0}".format(e))

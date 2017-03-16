@@ -21,6 +21,8 @@ import six
 import threading
 from twisted.internet.defer import inlineCallbacks
 
+from Queue import Queue
+
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
@@ -39,19 +41,23 @@ def sendNotification(msg=None):
 @six.add_metaclass(abc.ABCMeta)
 class Plugin(threading.Thread):
 
-    def __init__(self, name, plugin_conf=None):
+    def __init__(self, name, th_result, plugin_conf=None):
+
         threading.Thread.__init__(self)
         # self.setDaemon(1)
         self.setName("Plugin " + str(self.name))  # Set thread name
 
         self.name = name
         # self.path = package_path + "/plugins/" + self.name + ".py"
-        self.status = "None"
-        self.setStatus("INITED")
+        self.status = "INITED"
+        self.setStatus(self.status)
         self._is_running = True
         self.plugin_conf = plugin_conf
+        self.th_result = th_result
+        self.type = type
 
-        LOG.info("PLUGIN CONF: " + str(self.plugin_conf))
+
+
 
     @abc.abstractmethod
     def run(self):

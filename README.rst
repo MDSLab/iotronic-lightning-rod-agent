@@ -2,7 +2,7 @@
 iotronic_lightningrod
 ===============================
 
-Implementation of the Lightning-rod, the Stack4Things node-side probe
+Implementation of the Lightning-rod, the Stack4Things board-side probe
 
 Please fill here a long description which must be at least 3 lines wrapped on
 80 cols, so that distribution package maintainers can use it in their packages.

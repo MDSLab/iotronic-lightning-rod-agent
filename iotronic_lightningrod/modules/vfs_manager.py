@@ -39,11 +39,11 @@ LOG = logging.getLogger(__name__)
 
 class VfsManager(Module.Module):
 
-    def __init__(self, node, session):
-        super(VfsManager, self).__init__("VFS", node)
+    def __init__(self, board, session):
+        super(VfsManager, self).__init__("VFS", board)
 
         self.session = session
-        self.node = node
+        self.board = board
 
         """
         #print session
@@ -94,7 +94,7 @@ class VfsManager(Module.Module):
 
         try:
 
-            mounter = MounterRemote(mountSource, mountPoint, self.node, self.session, boardRemote, agentRemote)
+            mounter = MounterRemote(mountSource, mountPoint, self.board, self.session, boardRemote, agentRemote)
             mounter.start()
 
             result = "Mounted " + mountSource + " in " + mountPoint
@@ -145,7 +145,7 @@ class MounterLocal(threading.Thread):
 
 class MounterRemote(threading.Thread):
 
-    def __init__(self, mountSource, mountPoint, node, session, boardRemote, agentRemote):
+    def __init__(self, mountSource, mountPoint, board, session, boardRemote, agentRemote):
         threading.Thread.__init__(self)
         # self.setDaemon(1)
         self.setName("VFS-Mounter")  # Set thread name
@@ -153,7 +153,7 @@ class MounterRemote(threading.Thread):
         self.mountSource = mountSource
         self.mountPoint = mountPoint
         self.session = session
-        self.node = node
+        self.board = board
         self.boardRemote = boardRemote
         self.agentRemote = agentRemote
 
@@ -163,7 +163,7 @@ class MounterRemote(threading.Thread):
         """
         try:
             FUSE(
-                FuseRemoteManager(self.mountSource, self.node.agent, self.session, self.boardRemote, self.agentRemote),
+                FuseRemoteManager(self.mountSource, self.board.agent, self.session, self.boardRemote, self.agentRemote),
                 self.mountPoint, nothreads=False, foreground=True)
 
         except Exception as msg:
@@ -191,7 +191,7 @@ class FuseRemoteManager(Operations):
         self.boardRemote = boardRemote
         self.agentRemote = agentRemote
 
-        makeCall("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU", self.agent, self.session)  # TEMPORARY
+        #makeCall("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU", self.agent, self.session)  # TEMPORARY
 
     def join_path(self, partial):
         if partial.startswith("/"):

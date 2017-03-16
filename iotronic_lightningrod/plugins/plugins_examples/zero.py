@@ -19,13 +19,17 @@ from oslo_log import log as logging
 
 LOG = logging.getLogger(__name__)
 
-
 # User imports
 
 
 class Worker(Plugin.Plugin):
-    def __init__(self, name, plugin_conf=None):
-        super(Worker, self).__init__(name, plugin_conf)
+
+    def __init__(self, name, th_result, plugin_conf=None):
+        super(Worker, self).__init__(name, th_result, plugin_conf)
 
     def run(self):
+        LOG.info("Input parameters: " + str(self.plugin_conf))
         LOG.info("Plugin " + self.name + " process completed!")
+        self.th_result.put("ZERO RESULT")
+
+

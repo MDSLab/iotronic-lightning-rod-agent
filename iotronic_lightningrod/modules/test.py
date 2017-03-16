@@ -24,9 +24,9 @@ LOG = logging.getLogger(__name__)
 
 class Test(Module.Module):
 
-    def __init__(self, node):
+    def __init__(self, board):
 
-        super(Test, self).__init__("Test", node)
+        super(Test, self).__init__("Test", board)
 
     def test_function(self):
         import random

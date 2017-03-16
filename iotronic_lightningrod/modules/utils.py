@@ -56,8 +56,8 @@ def refresh_stevedore(namespace=None):
 
 class Utility(Module.Module):
 
-    def __init__(self, node, session):
-        super(Utility, self).__init__("Utility", node)
+    def __init__(self, board, session):
+        super(Utility, self).__init__("Utility", board)
 
     def finalize(self):
         pass
@@ -98,20 +98,20 @@ class Utility(Module.Module):
 
     def changeConf(self, conf):
 
-        yield self.node.getConf(conf)
+        yield self.board.getConf(conf)
 
-        self.node.setUpdateTime()
+        self.board.setUpdateTime()
 
-        result = "Node configuration changed!"
+        result = "Board configuration changed!"
         LOG.info("PROVISIONING RESULT: " + str(result))
 
         returnValue(result)
 
     def destroyNode(self, conf):
 
-        yield self.node.setConf(conf)
+        yield self.board.setConf(conf)
 
-        result = "Node configuration cleaned!"
+        result = "Board configuration cleaned!"
         LOG.info("DESTROY RESULT: " + str(result))
 
         returnValue(result)

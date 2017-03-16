@@ -26,12 +26,12 @@ LOG = logging.getLogger(__name__)
 SETTINGS = iotronic_home + '/settings.json'
 
 
-class Node(object):
+class Board(object):
 
     def __init__(self):
         self.iotronic_config = {}
 
-        # self.node_config = {}
+        self.board_config = {}
         self.name = None
         self.type = None
         self.status = None
@@ -64,7 +64,7 @@ class Node(object):
         return lr_settings
 
     def loadSettings(self):
-        '''This method gets and sets the Node attributes from the conf file.
+        '''This method gets and sets the board attributes from the conf file.
 
         '''
 
@@ -73,24 +73,24 @@ class Node(object):
 
         try:
             # STATUS OPERATIVE
-            node_config = self.iotronic_config['iotronic']['node']
-            self.uuid = node_config['uuid']
-            self.code = node_config['code']
-            self.name = node_config['name']
-            self.status = node_config['status']
-            self.type = node_config['type']
-            self.mobile = node_config['mobile']
-            self.extra = node_config['extra']
-            self.agent = node_config['agent']
-            self.created_at = node_config['created_at']
-            self.updated_at = node_config['updated_at']  # self.getTimestamp()
+            board_config = self.iotronic_config['iotronic']['board']
+            self.uuid = board_config['uuid']
+            self.code = board_config['code']
+            self.name = board_config['name']
+            self.status = board_config['status']
+            self.type = board_config['type']
+            self.mobile = board_config['mobile']
+            self.extra = board_config['extra']
+            self.agent = board_config['agent']
+            self.created_at = board_config['created_at']
+            self.updated_at = board_config['updated_at']  # self.getTimestamp()
 
             self.extra = self.iotronic_config['iotronic']['extra']
 
-            LOG.info('Node settings:')
+            LOG.info('Board settings:')
             LOG.info(' - code: ' + str(self.code))
             LOG.info(' - uuid: ' + str(self.uuid))
-            # LOG.debug(" - conf:\n" + json.dumps(node_config, indent=4))
+            # LOG.debug(" - conf:\n" + json.dumps(board_config, indent=4))
 
             self.getWampAgent(self.iotronic_config)
 
@@ -98,8 +98,8 @@ class Node(object):
             LOG.warning("settings.json file exception: " + str(err))
             # STATUS REGISTERED
             try:
-                self.code = node_config['code']
-                LOG.info('First registration node settings: ')
+                self.code = board_config['code']
+                LOG.info('First registration board settings: ')
                 LOG.info(' - code: ' + str(self.code))
                 self.getWampAgent(self.iotronic_config)
             except Exception as err:
@@ -107,7 +107,7 @@ class Node(object):
                 os._exit(1)
 
     def getWampAgent(self, config):
-        '''This method gets and sets the WAMP Node attributes from the conf file.
+        '''This method gets and sets the WAMP Board attributes from the conf file.
 
         '''
         try:
@@ -138,9 +138,9 @@ class Node(object):
         self.loadSettings()
 
     def updateStatus(self, status):
-        self.iotronic_config['iotronic']['node']["status"] = status
+        self.iotronic_config['iotronic']['board']["status"] = status
 
-        # self.iotronic_config['iotronic']['node']["updated_at"] = self.updated_at
+        # self.iotronic_config['iotronic']['board']["updated_at"] = self.updated_at
 
         with open(SETTINGS, 'w') as f:
             json.dump(self.iotronic_config, f, indent=4)
@@ -150,7 +150,7 @@ class Node(object):
         return datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')
 
     def setUpdateTime(self):
-        self.iotronic_config['iotronic']['node']["updated_at"] = self.updated_at
+        self.iotronic_config['iotronic']['board']["updated_at"] = self.updated_at
 
         with open(SETTINGS, 'w') as f:
             json.dump(self.iotronic_config, f, indent=4)

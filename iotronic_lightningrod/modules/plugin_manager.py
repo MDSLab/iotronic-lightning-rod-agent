@@ -23,6 +23,8 @@ import shutil
 import threading
 from twisted.internet.defer import returnValue
 
+from Queue import Queue
+
 from iotronic_lightningrod.config import iotronic_home
 from iotronic_lightningrod.modules import Module
 from iotronic_lightningrod.plugins import PluginSerializer
@@ -57,7 +59,9 @@ def createPlugin(plugin_name, code):
     plugins_conf = loadPluginsConf()
 
     plugins_conf['plugins'][plugin_name] = {}
-    plugins_conf['plugins'][plugin_name]['autostart'] = False   # TEMPORARY
+    plugins_conf['plugins'][plugin_name]['onboot'] = False   # TEMPORARY
+    plugins_conf['plugins'][plugin_name]['callable'] = False   # TEMPORARY
+
 
     with open(PLUGINS_CONF_FILE, 'w') as f:
         json.dump(plugins_conf, f, indent=4)
@@ -121,7 +125,7 @@ def getEnabledPlugins():
     plugins_conf = loadPluginsConf()
 
     for plugin in plugins_conf['plugins']:
-        enabled = plugins_conf['plugins'][plugin]['autostart']
+        enabled = plugins_conf['plugins'][plugin]['onboot']
         if enabled:
             enabledPlugins.append(plugin)
 
@@ -132,10 +136,10 @@ def getEnabledPlugins():
 
 class PluginManager(Module.Module):
 
-    def __init__(self, node, session):
+    def __init__(self, board, session):
 
         # Module declaration
-        super(PluginManager, self).__init__("PluginManager", node)
+        super(PluginManager, self).__init__("PluginManager", board)
 
         # Creation of plugins.json configuration file
         createPluginsConf()
@@ -194,6 +198,8 @@ class PluginManager(Module.Module):
 
             if os.path.exists(plugin_filename):
 
+
+
                 task = imp.load_source("plugin", plugin_filename)
 
                 LOG.info("Plugin " + plugin_name + " imported!")
@@ -243,6 +249,86 @@ class PluginManager(Module.Module):
             LOG.warning(result)
 
         returnValue(result)
+
+    def PluginCall(self, plugin_name, plugin_conf=None):
+
+        rpc_name = getFuncName()
+        LOG.info("RPC " + rpc_name + " CALLED for " + plugin_name + " plugin:")
+
+
+        if (plugin_name in PLUGINS_THRS) and (PLUGINS_THRS[plugin_name].isAlive()):
+            LOG.warning(" - Plugin " + plugin_name + " already started!")
+
+            result = rpc_name + " result: already started!"
+
+            returnValue(result)
+
+        else:
+
+            plugin_home = iotronic_home + "/plugins/" + plugin_name
+            plugin_filename = plugin_home + "/" + plugin_name + ".py"
+            plugin_conf_file = plugin_home + "/" + plugin_name + ".json"
+
+            LOG.debug(" - Plugin path: " + plugin_filename)
+            LOG.debug(" - Plugin Config path: " + plugin_conf_file)
+
+            if plugin_conf != None:
+                with open(plugin_conf_file, 'w') as f:
+                    json.dump(plugin_conf, f, indent=4)
+
+                with open(plugin_conf_file) as conf:
+                    plugin_conf_loaded = json.load(conf)
+
+            if os.path.exists(plugin_filename):
+
+                try:
+
+                    task = imp.load_source("plugin", plugin_filename)
+
+                    LOG.info("Plugin " + plugin_name + " imported!")
+
+                    th_result = Queue()
+
+                    LOG.info("Plugin configuration:\n" + str(plugin_conf_loaded))
+
+                except Exception as err:
+                    result = yield "Error importing plugin " + plugin_filename + ": " + str(err)
+                    LOG.error(result)
+                    returnValue(result)
+
+
+                try:
+
+                    if plugin_conf != None:
+                        worker = task.Worker(plugin_name, th_result, plugin_conf_loaded)
+                    else:
+                        worker = task.Worker(plugin_name, th_result)
+
+                    PLUGINS_THRS[plugin_name] = worker
+                    LOG.debug("Executing plugin " + str(worker))
+
+                    worker.start()
+
+                    while th_result.empty():
+                        pass
+
+                    response = yield th_result.get()
+
+                    result = worker.complete(rpc_name, response)
+
+                    returnValue(result)
+
+                except Exception as err:
+                    result = yield "Error spawning plugin " + plugin_filename + ": " + str(err)
+                    LOG.error(result)
+                    returnValue(result)
+
+            else:
+                result = rpc_name + " - ERROR " + plugin_filename + " does not exist!"
+                LOG.warning(result)
+                returnValue(result)
+
+
 
     def PluginRemove(self, plugin_name):
         rpc_name = getFuncName()

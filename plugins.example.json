@@ -1,7 +1,8 @@
 {
     "plugins": {
         "zero": {
-            "autostart": "false"
+            "onboot": "false",
+            "callable": "true"
         }
     }
 }

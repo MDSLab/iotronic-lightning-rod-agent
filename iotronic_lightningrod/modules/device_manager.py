@@ -26,14 +26,14 @@ from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
 
-def deviceWampRegister(dev_meth_list, node):
-    LOG.info(" - " + node.type + " device registering RPCs:")
+def deviceWampRegister(dev_meth_list, board):
+    LOG.info(" - " + board.type + " device registering RPCs:")
 
     for meth in dev_meth_list:
 
         if (meth[0] != "__init__"):  # We don't considere the __init__ method
             # LOG.info(" - " + str(meth[0]))
-            rpc_addr = u'iotronic.' + node.uuid + '.' + meth[0]
+            rpc_addr = u'iotronic.' + board.uuid + '.' + meth[0]
             # LOG.debug(" --> " + str(rpc_addr))
             SESSION.register(inlineCallbacks(meth[1]), rpc_addr)
 
@@ -42,12 +42,12 @@ def deviceWampRegister(dev_meth_list, node):
 
 class DeviceManager(Module.Module):
 
-    def __init__(self, node, session):
+    def __init__(self, board, session):
 
         # Module declaration
-        super(DeviceManager, self).__init__("DeviceManager", node)
+        super(DeviceManager, self).__init__("DeviceManager", board)
 
-        device_type = node.type
+        device_type = board.type
 
         path = package_path + "/devices/" + device_type + ".py"
 
@@ -61,7 +61,7 @@ class DeviceManager(Module.Module):
 
             dev_meth_list = inspect.getmembers(device, predicate=inspect.ismethod)
 
-            deviceWampRegister(dev_meth_list, node)
+            deviceWampRegister(dev_meth_list, board)
 
         else:
             LOG.warning("Device " + device_type + " not supported!")

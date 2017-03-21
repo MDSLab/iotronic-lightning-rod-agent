@@ -93,6 +93,6 @@ class Plugin(threading.Thread):
     def complete(self, rpc_name, result):
         self.setStatus(result)
         result = rpc_name + " result for " + self.name + ": " + self.checkStatus()
-        LOG.info(result)
+        #LOG.info(result)
 
         return result

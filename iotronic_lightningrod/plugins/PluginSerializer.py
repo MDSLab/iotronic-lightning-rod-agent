@@ -36,7 +36,7 @@ class ObjectSerializer(object):
 
         dumped = pickle.dumps(entity, 0)
 
-        LOG.debug(" - plugin serialized")
+        #LOG.debug(" - plugin serialized")
 
         return dumped
 
@@ -45,6 +45,6 @@ class ObjectSerializer(object):
 
         loaded = pickle.loads(str(entity))
 
-        LOG.debug(" - plugin deserialized")
+        #LOG.debug(" - plugin deserialized")
 
         return loaded

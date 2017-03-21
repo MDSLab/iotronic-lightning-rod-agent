@@ -40,7 +40,7 @@ import sys
 # Iotronic imports
 from config import entry_points_name
 from iotronic_lightningrod.Board import Board
-from iotronic_lightningrod.wampmessage import WampMessage
+import iotronic_lightningrod.wampmessage as WM
 
 
 # Global variables
@@ -52,49 +52,29 @@ board = None
 reconnection = False
 RPC = {}
 
-"""
-# WAMP opts
-wamp_opts = [
-    cfg.StrOpt('wamp_ip',
-               default='192.168.17.1',
-               help=('URL of wamp broker')),
-    cfg.IntOpt('wamp_port',
-               default=8181,
-               help='port wamp broker'),
-    cfg.StrOpt('wamp_transport_url',
-               default='ws://192.168.17.1:8181/',
-               help=('URL of wamp broker')),
-    cfg.StrOpt('wamp_realm',
-               default='s4t',
-               help=('realm broker')),
-]
 
-CONF.register_opts(wamp_opts, 'wamp')
-"""
-"""
-# Device options
-device_group = cfg.OptGroup(name='device', title='Device options')
-device_opts = [
+@inlineCallbacks
+def moduleReloadInfo(session, details):
 
-    cfg.StrOpt('type',
-               default='server',
-               help='Device type.'),
-]
+    try:
 
-CONF.register_group(device_group)
-CONF.register_opts(device_opts, 'device')
-"""
+        yield session.call(str(board.agent) + '.stack4things.connection', uuid=board.uuid, session=details.session)
+
+        for mod in RPC:
+            LOG.debug("- Module reloaded: " + str(mod))
+            """
+            for meth in RPC[mod]:
+                LOG.debug("   - RPC reloaded: " + str(meth[0]))
+            """
+            moduleWampRegister(session, RPC[mod])
 
 
-def moduleReloadInfo(session):
+    except Exception as e:
+        LOG.warning("Board connection call error: {0}".format(e))
+        ByeLogo()
+        os._exit(1)
 
-    for mod in RPC:
-        LOG.debug("- Module reloaded: " + str(mod))
-        """
-        for meth in RPC[mod]:
-            LOG.debug("   - RPC reloaded: " + str(meth[0]))
-        """
-        moduleWampRegister(session, RPC[mod])
+
 
 
 def moduleWampRegister(session, meth_list):
@@ -117,7 +97,7 @@ def modulesLoader(session):
 
     '''
 
-    LOG.debug("Entry-points:\n" + entry_points_name)
+    #LOG.debug("Entry-points:\n" + entry_points_name)
     LOG.info("Available modules: ")
 
     ep = []
@@ -137,8 +117,6 @@ def modulesLoader(session):
             # invoke_on_load=True,
             # invoke_args=(session,),
         )
-
-        LOG.info('\n')
 
         LOG.info('Modules to load:')
 
@@ -174,6 +152,48 @@ def modulesLoader(session):
         LOG.info("\n\nListening...")
 
 
+
+
+@inlineCallbacks
+def onBoardConnected(board, session, details):
+
+    global SESSION
+    SESSION = session
+
+    try:
+
+        res = yield session.call(str(board.agent) + '.stack4things.connection', uuid=board.uuid, session=details.session)
+
+        w_msg = WM.deserialize(res)
+
+        if w_msg.result == WM.SUCCESS:
+            LOG.info("Access granted to Iotronic: " + str(w_msg.message))
+
+            # LOADING BOARD MODULES
+            try:
+
+                yield modulesLoader(session)
+
+            except Exception as e:
+                LOG.warning("WARNING - Could not register procedures: {0}".format(e))
+                ByeLogo()
+                os._exit(1)
+
+        else:
+            LOG.error("Access denied to Iotronic: " + str(w_msg.message))
+            ByeLogo()
+            os._exit(1)
+
+
+    except Exception as e:
+        LOG.warning("Board connection call error: {0}".format(e))
+        ByeLogo()
+        os._exit(1)
+
+
+
+
+
 class WampFrontend(ApplicationSession):
 
     @inlineCallbacks
@@ -185,10 +205,12 @@ class WampFrontend(ApplicationSession):
         board.session = self
         board.session_id = details.session
 
+        #yield SESSION.publish('board.connection', board.uuid, details.session, 'connection')
+
         # print(" - session: " + str(details))
 
-        # if (reconnection is False) | (board.status == "registered"):
         if reconnection is False:
+
             LOG.info(" - Joined in WAMP-Agent:")
             LOG.info("   - wamp agent: " + str(board.agent))
             LOG.info("   - session ID: " + str(details.session))
@@ -211,13 +233,11 @@ class WampFrontend(ApplicationSession):
                     #LOG.info(" - Board registration result: \n" + json.dumps(res, indent=4))
                     #LOG.info(" - Board registration result NO JSON: \n" + str(res))
 
-
-
-                    w_msg = WampMessage().deserialize(res)
+                    w_msg = WM.deserialize(res)
 
                     #LOG.info(" - Board registration result: \n" + json.loads(w_msg.message, indent=4))
 
-                    if (w_msg.result == "SUCCESS"):
+                    if (w_msg.result == WM.SUCCESS):
                         LOG.info("Registration authorized by Iotronic: " + str(w_msg.message))
 
                         board.setConf(w_msg.message)
@@ -243,54 +263,23 @@ class WampFrontend(ApplicationSession):
             else:
 
                 # AFTER FIRST BOARD REGISTRAION
-
                 if board.status == "registered":
+
                     # In this case we manage the first reconnection after the provisioning phase:
                     # at this stage LR sets its status to "operative"
                     LOG.info("\n\n\nBoard is becoming operative...\n\n\n")
-
                     board.updateStatus("operative")
-
                     board.loadSettings()
 
                 # After the WAMP connection stage LR will contact its WAMP agent
                 # and load the enabled modules
-                try:
-
-                    res = yield self.call(str(board.agent) + '.stack4things.connection', uuid=board.uuid, session=details.session)
-
-                    w_msg=WampMessage().deserialize(res)
-                    #LOG.debug("Access information received: " + str(w_msg.result) + " - "+ str(w_msg.message))
-
-                    if (w_msg.result == "SUCCESS"):
-                        LOG.info("Access granted to Iotronic: " + str(w_msg.message))
-
-                        # LOADING BOARD MODULES
-                        try:
-
-                            yield modulesLoader(self)
-
-                        except Exception as e:
-                            LOG.warning("WARNING - Could not register procedures: {0}".format(e))
-                            ByeLogo()
-                            os._exit(1)
-
-                    else:
-                        LOG.error("Access denied to Iotronic: " + str(w_msg.message))
-                        ByeLogo()
-                        os._exit(1)
-
-
-
-                except Exception as e:
-                    LOG.warning("Board connection call error: {0}".format(e))
-                    ByeLogo()
-                    os._exit(1)
+                onBoardConnected(board, self, details)
 
         else:
-            yield moduleReloadInfo(self)
+            yield moduleReloadInfo(self, details)
             LOG.warning("WAMP session recovered!")
             LOG.info("\nListening...")
+
 
     @inlineCallbacks
     def onLeave(self, details):
@@ -308,7 +297,7 @@ class WampClientFactory(websocket.WampWebSocketClientFactory, ReconnectingClient
 
         global reconnection
         if (reconnection is False) & (board.status != "registered"):
-            # NORMAL STATE
+            # NORMAL STATE: we need to recover wamp session
             reconnection = True
 
             LOG.debug("Reconnecting to " + str(connector.getDestination()))
@@ -316,7 +305,6 @@ class WampClientFactory(websocket.WampWebSocketClientFactory, ReconnectingClient
 
         else:
             # REGISTRATION STATE
-
             LOG.debug("\n\nReconnecting after registration...\n\n")
 
             # LR load the new configuration and gets the new WAMP-Agent

@@ -23,14 +23,13 @@ import time
 
 
 class Worker(Plugin.Plugin):
-    def __init__(self, name, th_result, plugin_conf=None):
-        super(Worker, self).__init__(name, th_result, plugin_conf)
+    def __init__(self, uuid, name, q_result=None, params=None):
+        super(Worker, self).__init__(uuid, name, q_result, params)
 
     def run(self):
         LOG.info("Plugin " + self.name + " starting...")
-        LOG.info(self.plugin_conf)
+        LOG.info(self.params)
 
         while(self._is_running):
-            print(self.plugin_conf['message'])
+            print(self.params['message'])
             time.sleep(1)
-

@@ -38,6 +38,7 @@ class WampMessage(object):
         return self
     """
 
+
 class WampSuccess(WampMessage):
     def __init__(self, msg=None):
         super(WampSuccess, self).__init__(msg, SUCCESS)

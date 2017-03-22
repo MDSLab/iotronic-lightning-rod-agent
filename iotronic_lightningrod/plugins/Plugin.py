@@ -19,16 +19,12 @@ import httplib2
 import json
 import six
 import threading
-from twisted.internet.defer import inlineCallbacks
-
-from Queue import Queue
+# from twisted.internet.defer import inlineCallbacks
 
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
-from iotronic_lightningrod.lightningrod import SESSION
-
-
+"""
 @inlineCallbacks
 def sendNotification(msg=None):
     try:
@@ -36,28 +32,26 @@ def sendNotification(msg=None):
         LOG.info("NOTIFICATION " + str(res))
     except Exception as e:
         LOG.warning("NOTIFICATION error: {0}".format(e))
+"""
 
 
 @six.add_metaclass(abc.ABCMeta)
 class Plugin(threading.Thread):
 
-    def __init__(self, name, th_result, plugin_conf=None):
+    def __init__(self, uuid, name, q_result=None, params=None):
 
         threading.Thread.__init__(self)
         # self.setDaemon(1)
         self.setName("Plugin " + str(self.name))  # Set thread name
 
+        self.uuid = uuid
         self.name = name
-        # self.path = package_path + "/plugins/" + self.name + ".py"
         self.status = "INITED"
         self.setStatus(self.status)
         self._is_running = True
-        self.plugin_conf = plugin_conf
-        self.th_result = th_result
+        self.params = params
+        self.q_result = q_result
         self.type = type
-
-
-
 
     @abc.abstractmethod
     def run(self):
@@ -67,10 +61,12 @@ class Plugin(threading.Thread):
     def stop(self):
         self._is_running = False
 
+    """
     def Done(self):
         self.setStatus("COMPLETED")
         sendNotification(msg="hello!")
         self.checkStatus()
+    """
 
     def checkStatus(self):
         # LOG.debug("Plugin " + self.name + " check status: " + self.status)
@@ -92,7 +88,7 @@ class Plugin(threading.Thread):
 
     def complete(self, rpc_name, result):
         self.setStatus(result)
-        result = rpc_name + " result for " + self.name + ": " + self.checkStatus()
-        #LOG.info(result)
+        # result = rpc_name + " result for '" + self.name + "' ("+self.uuid+") : " + self.checkStatus()
+        result = rpc_name + " result: " + self.checkStatus()
 
         return result

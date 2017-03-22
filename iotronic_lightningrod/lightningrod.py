@@ -29,7 +29,6 @@ from oslo_log import log as logging
 
 # MODULES imports
 import inspect
-import json
 import os
 import pkg_resources
 import signal
@@ -38,7 +37,6 @@ import sys
 
 
 # Iotronic imports
-from config import entry_points_name
 from iotronic_lightningrod.Board import Board
 import iotronic_lightningrod.wampmessage as WM
 
@@ -55,6 +53,12 @@ RPC = {}
 
 @inlineCallbacks
 def moduleReloadInfo(session, details):
+    """This function is used in the reconnection phase to register again the RPCs of each module.
+
+    :param session:
+    :param details:
+    :return:
+    """
 
     try:
 
@@ -68,16 +72,19 @@ def moduleReloadInfo(session, details):
             """
             moduleWampRegister(session, RPC[mod])
 
-
     except Exception as e:
         LOG.warning("Board connection call error: {0}".format(e))
         ByeLogo()
         os._exit(1)
 
 
-
-
 def moduleWampRegister(session, meth_list):
+    """This function register for each module methods the relative RPC.
+
+    :param session:
+    :param meth_list:
+    :return:
+    """
 
     for meth in meth_list:
         # We don't considere the __init__ and finalize methods
@@ -93,11 +100,12 @@ def moduleWampRegister(session, meth_list):
 
 
 def modulesLoader(session):
-    '''Modules loader method thorugh stevedore libraries.
+    """Modules loader method thorugh stevedore libraries
 
-    '''
+    :param session:
+    :return:
+    """
 
-    #LOG.debug("Entry-points:\n" + entry_points_name)
     LOG.info("Available modules: ")
 
     ep = []
@@ -152,17 +160,27 @@ def modulesLoader(session):
         LOG.info("\n\nListening...")
 
 
-
-
 @inlineCallbacks
 def onBoardConnected(board, session, details):
+    """Function called to connect the board to Iotronic (after the first registration process).
+
+    The board:
+     1. logs in to Iotronic
+     2. loads the modules
+    :param board:
+    :param session:
+    :param details:
+    :return:
+
+    """
 
     global SESSION
     SESSION = session
 
     try:
 
-        res = yield session.call(str(board.agent) + '.stack4things.connection', uuid=board.uuid, session=details.session)
+        res = yield session.call(str(board.agent) + '.stack4things.connection',
+                                 uuid=board.uuid, session=details.session)
 
         w_msg = WM.deserialize(res)
 
@@ -184,17 +202,16 @@ def onBoardConnected(board, session, details):
             ByeLogo()
             os._exit(1)
 
-
     except Exception as e:
         LOG.warning("Board connection call error: {0}".format(e))
         ByeLogo()
         os._exit(1)
 
 
-
-
-
 class WampFrontend(ApplicationSession):
+    """Function to manage the WAMP connection events.
+
+    """
 
     @inlineCallbacks
     def onJoin(self, details):
@@ -204,10 +221,7 @@ class WampFrontend(ApplicationSession):
 
         board.session = self
         board.session_id = details.session
-
-        #yield SESSION.publish('board.connection', board.uuid, details.session, 'connection')
-
-        # print(" - session: " + str(details))
+        # LOG.debug(" - session: " + str(details))
 
         if reconnection is False:
 
@@ -221,8 +235,7 @@ class WampFrontend(ApplicationSession):
 
                 # FIRST BOARD REGISTRAION:
                 # If in the LR configuration file there is not the Board UUID specified it means
-                # the board is a new one and it has to call Iotronic in order to complete the
-                # registration
+                # the board is a new one and it has to call Iotronic in order to complete the registration
 
                 try:
 
@@ -230,30 +243,26 @@ class WampFrontend(ApplicationSession):
 
                     res = yield self.call(u'stack4things.register', code=board.code, session=details.session)
 
-                    #LOG.info(" - Board registration result: \n" + json.dumps(res, indent=4))
-                    #LOG.info(" - Board registration result NO JSON: \n" + str(res))
-
                     w_msg = WM.deserialize(res)
 
-                    #LOG.info(" - Board registration result: \n" + json.loads(w_msg.message, indent=4))
+                    # LOG.info(" - Board registration result: \n" + json.loads(w_msg.message, indent=4))
 
-                    if (w_msg.result == WM.SUCCESS):
+                    if w_msg.result == WM.SUCCESS:
+
                         LOG.info("Registration authorized by Iotronic: " + str(w_msg.message))
 
+                        # the message field contains the board configuration to load
                         board.setConf(w_msg.message)
 
                         # We need to disconnect the client from the registration-agent in
-                        # order to reconnect to the WAMP agent assigned by Iotronic
-                        # at the provisioning stage
+                        # order to reconnect to the WAMP agent assigned by Iotronic at the provisioning stage
                         LOG.info("\n\nDisconnecting from Registration Agent to load new settings...\n\n")
                         self.disconnect()
-
 
                     else:
                         LOG.error("Registration denied by Iotronic: " + str(w_msg.message))
                         ByeLogo()
                         os._exit(1)
-
 
                 except Exception as e:
                     LOG.warning(" - Board registration call error: {0}".format(e))
@@ -271,15 +280,14 @@ class WampFrontend(ApplicationSession):
                     board.updateStatus("operative")
                     board.loadSettings()
 
-                # After the WAMP connection stage LR will contact its WAMP agent
-                # and load the enabled modules
+                # After the WAMP connection stage LR will contact its WAMP agent and load the enabled modules
                 onBoardConnected(board, self, details)
 
         else:
+            # If the board is in connection recovery state we need to register again the RPCs of each module
             yield moduleReloadInfo(self, details)
             LOG.warning("WAMP session recovered!")
             LOG.info("\nListening...")
-
 
     @inlineCallbacks
     def onLeave(self, details):
@@ -325,7 +333,6 @@ def wampConnect(wamp_conf):
     transport_factory.autoPingTimeout = 1
 
     connector = websocket.connectWS(transport_factory)
-    # print connector
 
     LOG.info("WAMP status:")
     LOG.info(" - establishing connection to " + str(connector.getDestination()))

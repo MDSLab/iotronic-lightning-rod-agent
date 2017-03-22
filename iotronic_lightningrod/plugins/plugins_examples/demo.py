@@ -31,7 +31,7 @@ Rb = 10000
 Ginf = 120.6685
 
 # User global variables
-#board_uuid = ebec5fe9-cfed-5c78-ccb3-33978a6a064d Ingegneria-dev-14
+# board_uuid = ebec5fe9-cfed-5c78-ccb3-33978a6a064d Ingegneria-dev-14
 resource_id = "fccd5470-e5ed-4350-9aae-4419dd86264c"  # temperature resource id
 action_URL = "http://smartme-data.unime.it/api/3/action/datastore_upsert"
 
@@ -42,8 +42,8 @@ polling_time = 10
 
 
 class Worker(Plugin.Plugin):
-    def __init__(self, name, plugin_conf=None):
-        super(Worker, self).__init__(name, plugin_conf)
+    def __init__(self, name, params=None):
+        super(Worker, self).__init__(name, params)
 
     def run(self):
 

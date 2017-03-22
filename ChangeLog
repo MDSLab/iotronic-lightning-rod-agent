@@ -1,6 +1,7 @@
 CHANGES
 =======
 
+* Updated Plugin Manager; updated reconnection procedures
 * Updated name 'node' to 'board'
 * Cleaning
 * Registration-Authentication procedures updated. Credits updated

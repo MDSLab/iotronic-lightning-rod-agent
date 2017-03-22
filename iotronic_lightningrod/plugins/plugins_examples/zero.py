@@ -16,7 +16,6 @@
 from iotronic_lightningrod.plugins import Plugin
 
 from oslo_log import log as logging
-
 LOG = logging.getLogger(__name__)
 
 # User imports
@@ -24,12 +23,10 @@ LOG = logging.getLogger(__name__)
 
 class Worker(Plugin.Plugin):
 
-    def __init__(self, name, th_result, plugin_conf=None):
-        super(Worker, self).__init__(name, th_result, plugin_conf)
+    def __init__(self, uuid, name, q_result, params=None):
+        super(Worker, self).__init__(uuid, name, q_result, params)
 
     def run(self):
-        LOG.info("Input parameters: " + str(self.plugin_conf))
+        LOG.info("Input parameters: " + str(self.params))
         LOG.info("Plugin " + self.name + " process completed!")
-        self.th_result.put("ZERO RESULT")
-
-
+        self.q_result.put("ZERO RESULT")

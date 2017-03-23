@@ -79,7 +79,7 @@ def deletePlugin(plugin_uuid):
 
 
 def createPluginsConf():
-    """
+    """Create plugins.json file if it does not exist.
 
     :return:
 
@@ -92,9 +92,9 @@ def createPluginsConf():
 
 
 def loadPluginsConf():
-    """
+    """Load plugins.json JSON configuration.
 
-    :return:
+    :return: JSON object
 
     """
 
@@ -111,7 +111,7 @@ def loadPluginsConf():
 
 
 def getEnabledPlugins():
-    """ This function gets the list of all asynchronous plugins (callable = False) enabled at boot (onboot = True)
+    """This function gets the list of all asynchronous plugins (callable = False) enabled at boot (onboot = True)
 
     :return: enabledPlugins List
 
@@ -132,7 +132,7 @@ def getEnabledPlugins():
 
 
 def makeNothing():
-    """
+    """Sandbox function.
 
     :return:
 
@@ -212,15 +212,16 @@ def RebootOnBootPlugins():
 
 
 class PluginManager(Module.Module):
-    """Plugin module to manage the board plugins
+    """Plugin module to manage board plugins.
 
     """
 
     def __init__(self, board, session):
-        """
+        """Init function for PluginManager module.
 
         :param board:
         :param session:
+
         """
 
         # Module declaration
@@ -230,11 +231,13 @@ class PluginManager(Module.Module):
         createPluginsConf()
 
     def finalize(self):
-        """
+        """Function called at the end of module loading (after RPC registration).
+        This function in this module reloads the enabled (asynchronous) plugins at boot.
 
         :return:
 
         """
+
         # Reboot boot enabled plugins
         RebootOnBootPlugins()
 
@@ -302,7 +305,7 @@ class PluginManager(Module.Module):
                 plugins_conf['plugins'][plugin_uuid]['callable'] = callable
                 plugins_conf['plugins'][plugin_uuid]['updated_at'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')
 
-                LOG.info("Plugin "+plugin_name+" (" + str(plugin_uuid) + ") updated!")
+                LOG.info("Plugin " + plugin_name + " (" + str(plugin_uuid) + ") updated!")
                 message = rpc_name + " result: UPDATED"
 
             # Apply the changes to plugins.json
@@ -356,7 +359,7 @@ class PluginManager(Module.Module):
                 LOG.info(" - Plugin '" + plugin_uuid + "' imported!")
 
                 # Store input parameters of the plugin
-                if parameters != None:
+                if parameters is not None:
                     with open(plugin_params_file, 'w') as f:
                         json.dump(parameters, f, indent=4)
 
@@ -397,8 +400,8 @@ class PluginManager(Module.Module):
         rpc_name = getFuncName()
         LOG.info("RPC " + rpc_name + " CALLED for '" + plugin_uuid + "' plugin:")
 
-        if parameters != None:
-            LOG.info(" - "+rpc_name+" parameters: " + str(parameters))
+        if parameters is not None:
+            LOG.info(" - " + rpc_name + " parameters: " + str(parameters))
 
         if plugin_uuid in PLUGINS_THRS:
 
@@ -424,7 +427,6 @@ class PluginManager(Module.Module):
             message = rpc_name + " - ERROR " + plugin_uuid + " is not instantiated!"
             LOG.warning(" - " + message)
             w_msg = yield WM.WampError(message)
-
 
         returnValue(w_msg.serialize())
 
@@ -476,7 +478,7 @@ class PluginManager(Module.Module):
                 try:
 
                     # Store input parameters of the plugin
-                    if parameters != None:
+                    if parameters is not None:
                         with open(plugin_params_file, 'w') as f:
                             json.dump(parameters, f, indent=4)
 
@@ -504,7 +506,6 @@ class PluginManager(Module.Module):
                     w_msg = yield WM.WampSuccess(response)
 
                     returnValue(w_msg.serialize())
-
 
                 except Exception as err:
                     message = "Error spawning plugin " + plugin_filename + ": " + str(err)
@@ -577,7 +578,6 @@ class PluginManager(Module.Module):
                     # Remove from plugin thread list
                     del PLUGINS_THRS[plugin_uuid]
 
-
                 # START PLUGIN--------------------------------------------------------
                 if os.path.exists(plugin_filename):
 
@@ -609,7 +609,6 @@ class PluginManager(Module.Module):
                     w_msg = yield WM.WampError(message)
 
                 returnValue(w_msg.serialize())
-
 
         except Exception as err:
             message = "Error rebooting plugin '" + plugin_uuid + "': " + str(err)

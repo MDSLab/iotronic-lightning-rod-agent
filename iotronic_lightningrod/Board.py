@@ -42,15 +42,19 @@ class Board(object):
         self.session = None
         self.session_id = None
 
+        self.position = {}
+
         self.wamp_config = None
         self.extra = {}
 
         self.loadSettings()
 
     def loadConf(self):
-        '''This method loads the JSON configuraton file: settings.json.
+        """This method loads the JSON configuraton file: settings.json.
 
-        '''
+        :return:
+
+        """
 
         try:
 
@@ -84,6 +88,8 @@ class Board(object):
             self.agent = board_config['agent']
             self.created_at = board_config['created_at']
             self.updated_at = board_config['updated_at']  # self.getTimestamp()
+
+
 
             self.extra = self.iotronic_config['iotronic']['extra']
 

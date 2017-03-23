@@ -191,7 +191,7 @@ class FuseRemoteManager(Operations):
         self.boardRemote = boardRemote
         self.agentRemote = agentRemote
 
-        #makeCall("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU", self.agent, self.session)  # TEMPORARY
+        # makeCall("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU", self.agent, self.session)  # TEMPORARY
 
     def join_path(self, partial):
         if partial.startswith("/"):
@@ -305,13 +305,6 @@ class FuseRemoteManager(Operations):
 
     def fsync(self, path, fdatasync, fh):
         return self.flush(path, fh)
-
-
-
-
-
-
-
 
 
 class FuseManager(Operations):

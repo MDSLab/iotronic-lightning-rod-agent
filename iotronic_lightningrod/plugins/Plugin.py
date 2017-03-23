@@ -24,6 +24,8 @@ import threading
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
+from iotronic_lightningrod.lightningrod import board
+
 """
 @inlineCallbacks
 def sendNotification(msg=None):
@@ -34,6 +36,11 @@ def sendNotification(msg=None):
         LOG.warning("NOTIFICATION error: {0}".format(e))
 """
 
+def getBoardID():
+    return board.uuid
+
+def getPosition():
+    return board.position
 
 @six.add_metaclass(abc.ABCMeta)
 class Plugin(threading.Thread):
@@ -76,14 +83,26 @@ class Plugin(threading.Thread):
         self.status = status
         # LOG.debug("Plugin " + self.name + " changed status: " + self.status)
 
-    def sendRequest(self, url=None, headers={}, data=None, verbose=False):
+    def sendRequest(self, url, action, headers=None, body=None, verbose=False):
+        """Generic REST client for plugin users.
+
+        :param url:
+        :param action
+        :param headers:
+        :param data:
+        :param verbose:
+        :return:
+
+        """
         http = httplib2.Http()
         headers = headers
-        response, send = http.request(url, 'POST', headers=headers, body=data)
-        result = json.dumps(response, sort_keys=True, indent=4, separators=(',', ': '))
+        response, send = http.request(url, action, headers=headers, body=body)
+
         if verbose:
-            LOG.debug("\nREST REQUEST:\n" + send)
-            LOG.debug("\nREST RESPONSE:\n" + result)
+            req = json.loads(send)
+            LOG.info("\nREST REQUEST: HTTP " + str(response['status']) + " - success = "+ str(req['success']) + " - " + str(req['result']['records']))
+            #LOG.info("\nREST RESPONSE:\n" + str(response))
+
         return send
 
     def complete(self, rpc_name, result):

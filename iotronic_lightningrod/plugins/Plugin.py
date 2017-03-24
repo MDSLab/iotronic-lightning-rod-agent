@@ -39,7 +39,10 @@ def sendNotification(msg=None):
 def getBoardID():
     return board.uuid
 
-def getPosition():
+def getLocation():
+    return board.location
+
+def getBoardDevice():
     return board.position
 
 @six.add_metaclass(abc.ABCMeta)

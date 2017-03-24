@@ -42,7 +42,7 @@ class Board(object):
         self.session = None
         self.session_id = None
 
-        self.position = {}
+        self.location = {}
 
         self.wamp_config = None
         self.extra = {}
@@ -88,8 +88,7 @@ class Board(object):
             self.agent = board_config['agent']
             self.created_at = board_config['created_at']
             self.updated_at = board_config['updated_at']  # self.getTimestamp()
-
-
+            self.location = board_config['location']
 
             self.extra = self.iotronic_config['iotronic']['extra']
 

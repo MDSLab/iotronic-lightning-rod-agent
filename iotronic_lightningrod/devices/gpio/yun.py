@@ -14,6 +14,7 @@
 #    under the License.
 
 from iotronic_lightningrod.devices.gpio import Gpio
+import os
 import time
 
 from oslo_log import log as logging
@@ -21,6 +22,7 @@ LOG = logging.getLogger(__name__)
 
 
 class YunGpio(Gpio.Gpio):
+
     def __init__(self):
         super(YunGpio, self).__init__("yun")
 
@@ -37,41 +39,80 @@ class YunGpio(Gpio.Gpio):
             'D12': '122',
             'D6': '123'}
 
-        """
-        MAPPING = {
-        '104': 'D8',
-        '105': 'D9',
-        '106': 'D10',
-        '107': 'D11',
-        '114': 'D5',
-        '115': 'D13',
-        '116': 'D3',
-        '117': 'D2',
-        '120': 'D4',
-        '122': 'D12',
-        '123': 'D6'}
-        """
 
         # LOG.info("Arduino YUN gpio module importing...")
 
-    # Enable GPIO
     def EnableGPIO(self):
+        """Enable GPIO (device0).
+
+        :return:
+
+        """
         # LOG.info(" - EnableGPIO CALLED...")
 
         with open('/sys/bus/iio/devices/iio:device0/enable', 'a') as f:
             f.write('1')
 
-        result = "  - GPIO result: enabled!\n"
+        result = "  - GPIO enabled!\n"
         LOG.info(result)
 
     def DisableGPIO(self):
+        """Disable GPIO (device0).
+
+        :return:
+
+        """
         # LOG.info(" - DisableGPIO CALLED...")
 
         with open('/sys/bus/iio/devices/iio:device0/enable', 'a') as f:
             f.write('0')
 
-        result = "  - GPIO result: disabled!\n"
+        result = "  - GPIO disabled!\n"
         LOG.info(result)
+
+
+    def EnableI2c(self):
+        """Enable i2c device (device1).
+            Board.prototype.addI2c = function(name, driver, addr, bus)
+                board.addI2c('BAR', 'mpl3115', '0x60', 0):
+                - i2c_device.driver: mpl3115
+                - i2c_device.addr: 0x60
+                - i2c_device.name: BAR
+                - i2c_device.bus: 0
+
+        :return:
+
+        """
+        # LOG.info(" - EnableI2c CALLED...")
+        #
+
+        if os.path.exists('/sys/bus/i2c/devices/i2c-0/0-0060'):
+            result = "  - I2C device already enabled!"
+        else:
+
+            with open('/sys/bus/i2c/devices/i2c-0/new_device', 'a') as f:
+                #'echo '+i2c_device.driver+' '+i2c_device.addr+ '
+                f.write('mpl3115 0x60')
+                result = "  - I2C device enabled!"
+
+        LOG.debug(result)
+
+    def i2cRead(self, sensor):
+        """Read i2c raw value.
+
+            sensor options:
+            - in_pressure_raw
+            - in_temp_raw
+
+        :return:
+
+        """
+        with open("/sys/devices/mcuio/0:0.0/0:1.4/i2c-0/0-0060/iio:device1/in_" + sensor + "_raw") as raw:
+            value = raw.read()
+            # print("I2C VALUE: " + value)
+
+        return value
+
 
     def setPIN(self, DPIN, value):
         with open('/sys/class/gpio/' + DPIN + '/value', 'a') as f:

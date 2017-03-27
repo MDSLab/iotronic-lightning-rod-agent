@@ -160,6 +160,30 @@ def modulesLoader(session):
         LOG.info("\n\nListening...")
 
 
+class TimeoutError(Exception):
+    pass
+
+
+class timeout:
+
+    def __init__(self, seconds=1, error_message='Timeout', action=None):
+        self.seconds = seconds
+        self.error_message = error_message
+        self.action = action
+
+    def handle_timeout(self, signum, frame):
+        raise TimeoutError(self.error_message, self.action)
+
+    def __enter__(self):
+        signal.signal(signal.SIGALRM, self.handle_timeout)
+        signal.alarm(self.seconds)
+
+    def __exit__(self, type, value, traceback):
+        signal.alarm(0)
+
+
+
+
 @inlineCallbacks
 def onBoardConnected(board, session, details):
     """Function called to connect the board to Iotronic (after the first registration process).
@@ -179,12 +203,24 @@ def onBoardConnected(board, session, details):
 
     try:
 
-        res = yield session.call(str(board.agent) + '.stack4things.connection',
-                                 uuid=board.uuid, session=details.session)
+        try:
+
+            rpc = str(board.agent) + u'.stack4things.connection'
+
+            with timeout(seconds=3, action=rpc):
+                res = yield session.call(rpc, uuid=board.uuid, session=details.session)
+
+        except TimeoutError as err:
+            details = err.args[0]
+            LOG.warning("Board connection call timeout: " + str(details))
+            ByeLogo()
+            os._exit(1)
+
 
         w_msg = WM.deserialize(res)
 
         if w_msg.result == WM.SUCCESS:
+
             LOG.info("Access granted to Iotronic: " + str(w_msg.message))
 
             # LOADING BOARD MODULES
@@ -280,8 +316,16 @@ class WampFrontend(ApplicationSession):
                     board.updateStatus("operative")
                     board.loadSettings()
 
-                # After the WAMP connection stage LR will contact its WAMP agent and load the enabled modules
-                onBoardConnected(board, self, details)
+                elif board.status == "operative":
+
+                    # After the WAMP connection stage LR will contact its WAMP agent and load the enabled modules
+                    onBoardConnected(board, self, details)
+
+                else:
+                    LOG.error("Wrong board status '"+board.status+"'.")
+                    ByeLogo()
+                    os._exit(1)
+
 
         else:
             # If the board is in connection recovery state we need to register again the RPCs of each module

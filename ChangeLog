@@ -1,6 +1,8 @@
 CHANGES
 =======
 
+* Updated Plugin Class and added location to the Board class. Arduino YUN Gpio Manager updated: I2C support added
+* Updated Plugin Manager
 * Updated Plugin Manager
 * Updated Plugin Manager; updated reconnection procedures
 * Updated name 'node' to 'board'

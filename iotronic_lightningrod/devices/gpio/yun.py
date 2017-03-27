@@ -73,6 +73,7 @@ class YunGpio(Gpio.Gpio):
 
     def EnableI2c(self):
         """Enable i2c device (device1).
+        From ideino-linino-lib library:
             Board.prototype.addI2c = function(name, driver, addr, bus)
                 board.addI2c('BAR', 'mpl3115', '0x60', 0):
                 - i2c_device.driver: mpl3115
@@ -95,7 +96,7 @@ class YunGpio(Gpio.Gpio):
                 f.write('mpl3115 0x60')
                 result = "  - I2C device enabled!"
 
-        LOG.debug(result)
+        LOG.info(result)
 
     def i2cRead(self, sensor):
         """Read i2c raw value.

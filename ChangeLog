@@ -1,6 +1,7 @@
 CHANGES
 =======
 
+* Added exceptions management: at the moment TimeoutError only. Added plugin APIs. Plugin Manager updated
 * Updated Plugin Manager. Added TimeoutError exception: to improve and move in a specific library
 * Updated Plugin Class and added location to the Board class. Arduino YUN Gpio Manager updated: I2C support added
 * Updated Plugin Manager

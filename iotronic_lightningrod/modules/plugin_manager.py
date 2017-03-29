@@ -403,7 +403,7 @@ class PluginManager(Module.Module):
                     w_msg = yield WM.WampError(message)
 
             else:
-                message = rpc_name + " - WARNING " + plugin_uuiddd + "  is not running!"
+                message = rpc_name + " - WARNING " + plugin_uuid + "  is not running!"
                 LOG.warning(" - " + message)
                 w_msg = yield WM.WampWarning(message)
 

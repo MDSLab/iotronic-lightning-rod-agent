@@ -295,10 +295,12 @@ class WampFrontend(ApplicationSession):
                     LOG.info("\n\n\nBoard is becoming operative...\n\n\n")
                     board.updateStatus("operative")
                     board.loadSettings()
+                    onBoardConnected(board, self, details)
 
                 elif board.status == "operative":
 
                     # After the WAMP connection stage LR will contact its WAMP agent and load the enabled modules
+                    board.loadSettings()
                     onBoardConnected(board, self, details)
 
                 else:

@@ -31,5 +31,5 @@ class Worker(Plugin.Plugin):
         LOG.info(self.params)
 
         while(self._is_running):
-            print(self.params['message'])
+            LOG.info(self.params['message'])
             time.sleep(1)

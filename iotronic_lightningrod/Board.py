@@ -44,6 +44,8 @@ class Board(object):
 
         self.location = {}
 
+        self.device = None
+
         self.wamp_config = None
         self.extra = {}
 

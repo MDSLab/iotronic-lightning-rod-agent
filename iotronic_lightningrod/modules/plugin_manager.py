@@ -42,42 +42,6 @@ def getFuncName():
     return inspect.stack()[1][3]
 
 
-def deletePlugin(plugin_uuid):
-    """Delete plugin folder and files if they exist
-
-    :param plugin_uuid:
-    :return:
-
-    """
-
-    try:
-        plugin_path = iotronic_home + "/plugins/" + plugin_uuid + "/"
-        shutil.rmtree(plugin_path, ignore_errors=False, onerror=None)
-    except Exception as err:
-        LOG.error("Removing plugin's files error in " + plugin_path + ": " + str(err))
-
-    # Remove from plugins.json file its configuration
-    plugins_conf = loadPluginsConf()
-
-    if plugin_uuid in plugins_conf['plugins']:
-        del plugins_conf['plugins'][plugin_uuid]
-
-        with open(PLUGINS_CONF_FILE, 'w') as f:
-            json.dump(plugins_conf, f, indent=4)
-
-        if plugin_uuid in PLUGINS_THRS:
-            del PLUGINS_THRS[plugin_uuid]
-
-        result = "PluginRemove result: " + plugin_uuid + " removed!"
-        LOG.info(" - " + result)
-
-    else:
-        result = "PluginRemove result:  " + plugin_uuid + " already removed!"
-        LOG.warning(" - " + result)
-
-    return result
-
-
 def createPluginsConf():
     """Create plugins.json file if it does not exist.
 
@@ -284,6 +248,8 @@ class PluginManager(Module.Module):
             # Load plugins.json configuration file
             plugins_conf = loadPluginsConf()
 
+            #LOG.debug("Plugin setup:\n" + json.dumps(plugin, indent=4, sort_keys=True))
+
             # Save plugin settings in plugins.json
             if plugin_uuid not in plugins_conf['plugins']:
 
@@ -307,6 +273,8 @@ class PluginManager(Module.Module):
 
                 LOG.info("Plugin " + plugin_name + " (" + str(plugin_uuid) + ") updated!")
                 message = rpc_name + " result: UPDATED"
+
+            LOG.info("Plugin setup:\n" + json.dumps(plugins_conf['plugins'][plugin_uuid], indent=4, sort_keys=True))
 
             # Apply the changes to plugins.json
             with open(PLUGINS_CONF_FILE, 'w') as f:
@@ -555,17 +523,69 @@ class PluginManager(Module.Module):
 
         LOG.info("RPC " + rpc_name + " for plugin " + plugin_uuid)
 
-        try:
+        plugin_path = iotronic_home + "/plugins/" + plugin_uuid + "/"
 
-            message = deletePlugin(plugin_uuid)
-            w_msg = yield WM.WampSuccess(message)
-            returnValue(w_msg.serialize())
+        if os.path.exists(plugin_path) is False or os.path.exists(PLUGINS_CONF_FILE) is False:
 
-        except Exception as err:
-            message = "Plugin removing error: {0}".format(err)
+            message = "Plugin paths or files do not exist!"
             LOG.error(message)
-            w_msg = yield WM.WampError(str(err))
+            w_msg = yield WM.WampError(str(message))
             returnValue(w_msg.serialize())
+
+        else:
+
+            LOG.info("Removing plugin...")
+
+            try:
+
+                try:
+
+                    shutil.rmtree(plugin_path, ignore_errors=False, onerror=None)
+
+                except Exception as err:
+                    message = "Removing plugin's files error in " + plugin_path + ": " + str(err)
+                    LOG.error(message)
+                    w_msg = yield WM.WampError(str(err))
+                    returnValue(w_msg.serialize())
+
+
+                # Remove from plugins.json file its configuration
+                try:
+
+                    plugins_conf = loadPluginsConf()
+
+                    if plugin_uuid in plugins_conf['plugins']:
+
+                        del plugins_conf['plugins'][plugin_uuid]
+
+                        with open(PLUGINS_CONF_FILE, 'w') as f:
+                            json.dump(plugins_conf, f, indent=4)
+
+                        if plugin_uuid in PLUGINS_THRS:
+                            del PLUGINS_THRS[plugin_uuid]
+
+                        message = "PluginRemove result: " + plugin_uuid + " removed!"
+                        LOG.info(" - " + message)
+
+                    else:
+                        message = "PluginRemove result:  " + plugin_uuid + " already removed!"
+                        LOG.warning(" - " + message)
+
+                    w_msg = yield WM.WampSuccess(message)
+                    returnValue(w_msg.serialize())
+
+                except Exception as err:
+                    message = "Updating plugins.json error: " + str(err)
+                    LOG.error(message)
+                    w_msg = yield WM.WampError(str(err))
+                    returnValue(w_msg.serialize())
+
+
+            except Exception as err:
+                message = "Plugin removing error: {0}".format(err)
+                LOG.error(message)
+                w_msg = yield WM.WampError(str(err))
+                returnValue(w_msg.serialize())
 
     def PluginReboot(self, plugin_uuid):
         """To reboot an asynchronous plugin (callable = false) into the board

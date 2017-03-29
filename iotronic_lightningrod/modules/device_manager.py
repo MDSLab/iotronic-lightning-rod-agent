@@ -63,6 +63,8 @@ class DeviceManager(Module.Module):
 
             deviceWampRegister(dev_meth_list, board)
 
+            board.device = device
+
         else:
             LOG.warning("Device " + device_type + " not supported!")
 

@@ -39,6 +39,8 @@ import sys
 # Iotronic imports
 from iotronic_lightningrod.Board import Board
 import iotronic_lightningrod.wampmessage as WM
+from iotronic_lightningrod.common.exception import timeoutRPC
+from iotronic_lightningrod.common.exception import TimeoutError
 
 
 # Global variables
@@ -160,29 +162,6 @@ def modulesLoader(session):
         LOG.info("\n\nListening...")
 
 
-class TimeoutError(Exception):
-    pass
-
-
-class timeout:
-
-    def __init__(self, seconds=1, error_message='Timeout', action=None):
-        self.seconds = seconds
-        self.error_message = error_message
-        self.action = action
-
-    def handle_timeout(self, signum, frame):
-        raise TimeoutError(self.error_message, self.action)
-
-    def __enter__(self):
-        signal.signal(signal.SIGALRM, self.handle_timeout)
-        signal.alarm(self.seconds)
-
-    def __exit__(self, type, value, traceback):
-        signal.alarm(0)
-
-
-
 
 @inlineCallbacks
 def onBoardConnected(board, session, details):
@@ -203,18 +182,11 @@ def onBoardConnected(board, session, details):
 
     try:
 
-        try:
+        rpc = str(board.agent) + u'.stack4things.connection'
 
-            rpc = str(board.agent) + u'.stack4things.connection'
-
-            with timeout(seconds=3, action=rpc):
-                res = yield session.call(rpc, uuid=board.uuid, session=details.session)
-
-        except TimeoutError as err:
-            details = err.args[0]
-            LOG.warning("Board connection call timeout: " + str(details))
-            ByeLogo()
-            os._exit(1)
+        with timeoutRPC(seconds=3, action=rpc):
+            #import time; time.sleep(5)
+            res = yield session.call(rpc, uuid=board.uuid, session=details.session)
 
 
         w_msg = WM.deserialize(res)
@@ -238,10 +210,14 @@ def onBoardConnected(board, session, details):
             ByeLogo()
             os._exit(1)
 
+
     except Exception as e:
         LOG.warning("Board connection call error: {0}".format(e))
         ByeLogo()
         os._exit(1)
+
+
+
 
 
 class WampFrontend(ApplicationSession):
@@ -277,7 +253,11 @@ class WampFrontend(ApplicationSession):
 
                     LOG.info(" - Board needs to be registered to Iotronic.")
 
-                    res = yield self.call(u'stack4things.register', code=board.code, session=details.session)
+                    rpc = u'stack4things.register'
+
+                    with timeoutRPC(seconds=3, action=rpc):
+
+                        res = yield self.call(rpc, code=board.code, session=details.session)
 
                     w_msg = WM.deserialize(res)
 
@@ -391,6 +371,7 @@ class WampManager(object):
         LOG.info(" - starting WAMP server...")
         reactor.run()
 
+        """
         # PROVVISORIO --------------------------------------------------------------
         from subprocess import call
         LOG.debug("Unmounting...")
@@ -406,7 +387,7 @@ class WampManager(object):
             result = "Unmounting error:", msg
             LOG.debug(result)
         # --------------------------------------------------------------------------
-
+        """
     def stop(self):
         LOG.info("Stopping WAMP-agent server...")
         reactor.stop()

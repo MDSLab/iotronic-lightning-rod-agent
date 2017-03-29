@@ -15,18 +15,16 @@
 
 
 import abc
-import httplib2
-import json
 import six
 import threading
-# from twisted.internet.defer import inlineCallbacks
 
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
-from iotronic_lightningrod.lightningrod import board
 
 """
+from twisted.internet.defer import inlineCallbacks
+
 @inlineCallbacks
 def sendNotification(msg=None):
     try:
@@ -36,14 +34,7 @@ def sendNotification(msg=None):
         LOG.warning("NOTIFICATION error: {0}".format(e))
 """
 
-def getBoardID():
-    return board.uuid
 
-def getLocation():
-    return board.location
-
-def getBoardDevice():
-    return board.position
 
 @six.add_metaclass(abc.ABCMeta)
 class Plugin(threading.Thread):
@@ -85,28 +76,6 @@ class Plugin(threading.Thread):
     def setStatus(self, status):
         self.status = status
         # LOG.debug("Plugin " + self.name + " changed status: " + self.status)
-
-    def sendRequest(self, url, action, headers=None, body=None, verbose=False):
-        """Generic REST client for plugin users.
-
-        :param url:
-        :param action
-        :param headers:
-        :param data:
-        :param verbose:
-        :return:
-
-        """
-        http = httplib2.Http()
-        headers = headers
-        response, send = http.request(url, action, headers=headers, body=body)
-
-        if verbose:
-            req = json.loads(send)
-            LOG.info("\nREST REQUEST: HTTP " + str(response['status']) + " - success = "+ str(req['success']) + " - " + str(req['result']['records']))
-            #LOG.info("\nREST RESPONSE:\n" + str(response))
-
-        return send
 
     def complete(self, rpc_name, result):
         self.setStatus(result)

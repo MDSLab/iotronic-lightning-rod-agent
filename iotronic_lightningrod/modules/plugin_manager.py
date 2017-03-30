@@ -286,7 +286,7 @@ class PluginManager(Module.Module):
         except Exception as err:
             message = "Plugin injection error: {0}".format(err)
             LOG.error(" - " + message)
-            w_msg = yield WM.WampError(err)
+            w_msg = yield WM.WampError(str(err))
             returnValue(w_msg.serialize())
 
         returnValue(w_msg.serialize())
@@ -306,63 +306,74 @@ class PluginManager(Module.Module):
             LOG.info("RPC " + rpc_name + " called for '" + plugin_uuid + "' plugin:")
 
             plugins_conf = loadPluginsConf()
-            plugin_name = plugins_conf['plugins'][plugin_uuid]['name']
 
-            # Check if the plugin is already running
-            if (plugin_uuid in PLUGINS_THRS) and (PLUGINS_THRS[plugin_uuid].isAlive()):
+            if plugin_uuid in plugins_conf['plugins']:
 
-                message = "ALREADY STARTED!"
-                LOG.warning(" - Plugin " + plugin_uuid + " already started!")
-                w_msg = yield WM.WampError(message)
+                plugin_name = plugins_conf['plugins'][plugin_uuid]['name']
 
-            else:
+                # Check if the plugin is already running
+                if (plugin_uuid in PLUGINS_THRS) and (PLUGINS_THRS[plugin_uuid].isAlive()):
 
-                plugin_home = iotronic_home + "/plugins/" + plugin_uuid    # Get python module path
-                plugin_filename = plugin_home + "/" + plugin_uuid + ".py"
-                plugin_params_file = plugin_home + "/" + plugin_uuid + ".json"
-
-                # Import plugin (as python module)
-                if os.path.exists(plugin_filename):
-
-                    task = imp.load_source("plugin", plugin_filename)
-
-                    LOG.info(" - Plugin '" + plugin_uuid + "' imported!")
-
-                    # Store input parameters of the plugin
-                    if parameters is not None:
-
-                        with open(plugin_params_file, 'w') as f:
-                            json.dump(parameters, f, indent=4)
-
-                        with open(plugin_params_file) as conf:
-                            plugin_params = json.load(conf)
-
-                        LOG.info(" - plugin with parameters:")
-                        LOG.info("   " + str(plugin_params))
-
-                    else:
-                        plugin_params = None
-
-                    worker = task.Worker(plugin_uuid, plugin_name, params=plugin_params)
-
-                    PLUGINS_THRS[plugin_uuid] = worker
-                    LOG.debug(" - Starting plugin " + str(worker))
-
-                    worker.start()
-
-                    response = "STARTED"
-                    LOG.info(" - " + worker.complete(rpc_name, response))
-                    w_msg = yield WM.WampSuccess(response)
+                    message = "ALREADY STARTED!"
+                    LOG.warning(" - Plugin " + plugin_uuid + " already started!")
+                    w_msg = yield WM.WampError(message)
 
                 else:
-                    message = rpc_name + " - ERROR " + plugin_filename + " does not exist!"
-                    LOG.error(" - " + message)
-                    w_msg = yield WM.WampError(message)
+
+                    plugin_home = iotronic_home + "/plugins/" + plugin_uuid  # Get python module path
+                    plugin_filename = plugin_home + "/" + plugin_uuid + ".py"
+                    plugin_params_file = plugin_home + "/" + plugin_uuid + ".json"
+
+                    # Import plugin (as python module)
+                    if os.path.exists(plugin_filename):
+
+                        task = imp.load_source("plugin", plugin_filename)
+
+                        LOG.info(" - Plugin '" + plugin_uuid + "' imported!")
+
+                        # Store input parameters of the plugin
+                        if parameters is not None:
+
+                            with open(plugin_params_file, 'w') as f:
+                                json.dump(parameters, f, indent=4)
+
+                            with open(plugin_params_file) as conf:
+                                plugin_params = json.load(conf)
+
+                            LOG.info(" - plugin with parameters:")
+                            LOG.info("   " + str(plugin_params))
+
+                        else:
+                            plugin_params = None
+
+                        worker = task.Worker(plugin_uuid, plugin_name, params=plugin_params)
+
+                        PLUGINS_THRS[plugin_uuid] = worker
+                        LOG.debug(" - Starting plugin " + str(worker))
+
+                        worker.start()
+
+                        response = "STARTED"
+                        LOG.info(" - " + worker.complete(rpc_name, response))
+                        w_msg = yield WM.WampSuccess(response)
+
+                    else:
+
+                        message = rpc_name + " - ERROR " + plugin_filename + " does not exist!"
+                        LOG.error(" - " + message)
+                        w_msg = yield WM.WampError(message)
+
+            else:
+                message = "Plugin " + plugin_uuid + " does not exist in this board!"
+                LOG.warning(" - " + message)
+                w_msg = yield WM.WampError(message)
+
+
 
         except Exception as err:
             message = rpc_name + " - ERROR - plugin (" + plugin_uuid + ") - " + str(err)
             LOG.error(" - " + message)
-            w_msg = yield WM.WampError(err)
+            w_msg = yield WM.WampError(str(err))
             returnValue(w_msg.serialize())
 
         returnValue(w_msg.serialize())
@@ -378,6 +389,7 @@ class PluginManager(Module.Module):
         LOG.info("RPC " + rpc_name + " CALLED for '" + plugin_uuid + "' plugin:")
 
         if parameters is not None:
+
             LOG.info(" - " + rpc_name + " parameters: " + str(parameters))
 
         try:
@@ -385,7 +397,7 @@ class PluginManager(Module.Module):
             if plugin_uuid in PLUGINS_THRS:
 
                 worker = PLUGINS_THRS[plugin_uuid]
-                LOG.info(" - Stopping plugin " + str(worker))
+                LOG.debug(" - Stopping plugin " + str(worker))
 
                 if worker.isAlive():
 
@@ -529,12 +541,12 @@ class PluginManager(Module.Module):
 
             message = "Plugin paths or files do not exist!"
             LOG.error(message)
-            w_msg = yield WM.WampError(str(message))
+            w_msg = yield WM.WampError(message)
             returnValue(w_msg.serialize())
 
         else:
 
-            LOG.info("Removing plugin...")
+            LOG.info(" - Removing plugin...")
 
             try:
 
@@ -544,7 +556,7 @@ class PluginManager(Module.Module):
 
                 except Exception as err:
                     message = "Removing plugin's files error in " + plugin_path + ": " + str(err)
-                    LOG.error(message)
+                    LOG.error(" - " + message)
                     w_msg = yield WM.WampError(str(err))
                     returnValue(w_msg.serialize())
 
@@ -556,12 +568,20 @@ class PluginManager(Module.Module):
 
                     if plugin_uuid in plugins_conf['plugins']:
 
+                        plugin_name = plugins_conf['plugins'][plugin_uuid]['name']
+
                         del plugins_conf['plugins'][plugin_uuid]
 
                         with open(PLUGINS_CONF_FILE, 'w') as f:
                             json.dump(plugins_conf, f, indent=4)
 
                         if plugin_uuid in PLUGINS_THRS:
+                            worker = PLUGINS_THRS[plugin_uuid]
+                            if worker.isAlive():
+                                LOG.info(" - Plugin " + plugin_name + " is running...")
+                                worker.stop()
+                                LOG.info("   ...stopped!")
+
                             del PLUGINS_THRS[plugin_uuid]
 
                         message = "PluginRemove result: " + plugin_uuid + " removed!"
@@ -576,14 +596,14 @@ class PluginManager(Module.Module):
 
                 except Exception as err:
                     message = "Updating plugins.json error: " + str(err)
-                    LOG.error(message)
+                    LOG.error(" - " + message)
                     w_msg = yield WM.WampError(str(err))
                     returnValue(w_msg.serialize())
 
 
             except Exception as err:
                 message = "Plugin removing error: {0}".format(err)
-                LOG.error(message)
+                LOG.error(" - " + message)
                 w_msg = yield WM.WampError(str(err))
                 returnValue(w_msg.serialize())
 

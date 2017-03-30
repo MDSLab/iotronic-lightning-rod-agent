@@ -48,13 +48,16 @@ class YunGpio(Gpio.Gpio):
         :return:
 
         """
-        # LOG.info(" - EnableGPIO CALLED...")
+        try:
 
-        with open('/sys/bus/iio/devices/iio:device0/enable', 'a') as f:
-            f.write('1')
+            with open('/sys/bus/iio/devices/iio:device0/enable', 'a') as f:
+                f.write('1')
 
-        result = "  - GPIO enabled!\n"
-        LOG.info(result)
+            result = "  - GPIO enabled!\n"
+            LOG.info(result)
+
+        except Exception as err:
+            LOG.error("Error enabling GPIO (device0): " + str(err))
 
     def DisableGPIO(self):
         """Disable GPIO (device0).
@@ -62,14 +65,14 @@ class YunGpio(Gpio.Gpio):
         :return:
 
         """
-        # LOG.info(" - DisableGPIO CALLED...")
+        try:
+            with open('/sys/bus/iio/devices/iio:device0/enable', 'a') as f:
+                f.write('0')
 
-        with open('/sys/bus/iio/devices/iio:device0/enable', 'a') as f:
-            f.write('0')
-
-        result = "  - GPIO disabled!\n"
-        LOG.info(result)
-
+            result = "  - GPIO disabled!\n"
+            LOG.info(result)
+        except Exception as err:
+            LOG.error("Error disabling GPIO (device0): " + str(err))
 
     def EnableI2c(self):
         """Enable i2c device (device1).
@@ -84,19 +87,20 @@ class YunGpio(Gpio.Gpio):
         :return:
 
         """
-        # LOG.info(" - EnableI2c CALLED...")
-        #
 
-        if os.path.exists('/sys/bus/i2c/devices/i2c-0/0-0060'):
-            result = "  - I2C device already enabled!"
-        else:
+        try:
+            if os.path.exists('/sys/bus/i2c/devices/i2c-0/0-0060'):
+                result = "  - I2C device already enabled!"
+            else:
 
-            with open('/sys/bus/i2c/devices/i2c-0/new_device', 'a') as f:
-                #'echo '+i2c_device.driver+' '+i2c_device.addr+ '
-                f.write('mpl3115 0x60')
-                result = "  - I2C device enabled!"
+                with open('/sys/bus/i2c/devices/i2c-0/new_device', 'a') as f:
+                    #'echo '+i2c_device.driver+' '+i2c_device.addr+ '
+                    f.write('mpl3115 0x60')
+                    result = "  - I2C device enabled!"
 
-        LOG.info(result)
+            LOG.info(result)
+        except Exception as err:
+            LOG.error("Error enabling I2C (device1): " + str(err))
 
     def i2cRead(self, sensor):
         """Read i2c raw value.
@@ -108,16 +112,24 @@ class YunGpio(Gpio.Gpio):
         :return:
 
         """
-        with open("/sys/devices/mcuio/0:0.0/0:1.4/i2c-0/0-0060/iio:device1/in_" + sensor + "_raw") as raw:
-            value = raw.read()
-            # print("I2C VALUE: " + value)
+        try:
+            with open("/sys/devices/mcuio/0:0.0/0:1.4/i2c-0/0-0060/iio:device1/in_" + sensor + "_raw") as raw:
+                value = raw.read()
+                # print("I2C VALUE: " + value)
+        except Exception as err:
+            LOG.error("Error reading I2C device: " + str(err))
+            value = None
 
         return value
 
 
     def setPIN(self, DPIN, value):
-        with open('/sys/class/gpio/' + DPIN + '/value', 'a') as f:
-            f.write(value)
+        try:
+            with open('/sys/class/gpio/' + DPIN + '/value', 'a') as f:
+                f.write(value)
+
+        except Exception as err:
+            LOG.error("Error setting PIN value: " + str(err))
 
     def _setGPIOs(self, Dpin, direction, value):
         """GPIO mapping on lininoIO
@@ -138,25 +150,36 @@ class YunGpio(Gpio.Gpio):
 
         """
 
-        with open('/sys/class/gpio/export', 'a') as f_export:
-            f_export.write(self.MAPPING[Dpin])
+        try:
 
-        with open('/sys/class/gpio/D13/direction', 'a') as f_direction:
-            f_direction.write(direction)
+            with open('/sys/class/gpio/export', 'a') as f_export:
+                f_export.write(self.MAPPING[Dpin])
 
-        with open('/sys/class/gpio/D13/value', 'a') as f_value:
-            f_value.write(value)
+            with open('/sys/class/gpio/' + Dpin + '/direction', 'a') as f_direction:
+                f_direction.write(direction)
 
-        with open('/sys/class/gpio/D13/value') as f_value:
-            result = "PIN " + Dpin + " value " + f_value.read()
-            # print(result)
+            with open('/sys/class/gpio/' + Dpin + '/value', 'a') as f_value:
+                f_value.write(value)
+
+            with open('/sys/class/gpio/' + Dpin + '/value') as f_value:
+                result = "PIN " + Dpin + " value " + f_value.read()
+                # print(result)
+
+        except Exception as err:
+            LOG.error("Error setting GPIO value: " + str(err))
+            result = None
 
         return result
 
     def _readVoltage(self, pin):
-        with open("/sys/bus/iio/devices/iio:device0/in_voltage_" + pin + "_raw") as raw:
-            voltage = raw.read()
-            # print("VOLTAGE: " + voltage)
+
+        try:
+            with open("/sys/bus/iio/devices/iio:device0/in_voltage_" + pin + "_raw") as raw:
+                voltage = raw.read()
+                # print("VOLTAGE: " + voltage)
+        except Exception as err:
+            LOG.error("Error reading voltage: " + str(err))
+            voltage = None
 
         return voltage
 

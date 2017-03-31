@@ -32,6 +32,7 @@ import inspect
 import os
 import pkg_resources
 import signal
+import socket
 from stevedore import extension
 import sys
 
@@ -53,7 +54,7 @@ reconnection = False
 RPC = {}
 
 
-@inlineCallbacks
+#@inlineCallbacks
 def moduleReloadInfo(session, details):
     """This function is used in the reconnection phase to register again the RPCs of each module.
 
@@ -64,8 +65,6 @@ def moduleReloadInfo(session, details):
 
     try:
 
-        yield session.call(str(board.agent) + '.stack4things.connection', uuid=board.uuid, session=details.session)
-
         for mod in RPC:
             LOG.debug("- Module reloaded: " + str(mod))
             """
@@ -74,10 +73,9 @@ def moduleReloadInfo(session, details):
             """
             moduleWampRegister(session, RPC[mod])
 
-    except Exception as e:
-        LOG.warning("Board connection call error: {0}".format(e))
-        ByeLogo()
-        os._exit(1)
+    except Exception as err:
+        LOG.warning("Board modules reloading error: " + str(err))
+        Bye()
 
 
 def moduleWampRegister(session, meth_list):
@@ -162,7 +160,6 @@ def modulesLoader(session):
         LOG.info("\n\nListening...")
 
 
-
 @inlineCallbacks
 def onBoardConnected(board, session, details):
     """Function called to connect the board to Iotronic (after the first registration process).
@@ -202,19 +199,16 @@ def onBoardConnected(board, session, details):
 
             except Exception as e:
                 LOG.warning("WARNING - Could not register procedures: {0}".format(e))
-                ByeLogo()
-                os._exit(1)
+                Bye()
 
         else:
             LOG.error("Access denied to Iotronic: " + str(w_msg.message))
-            ByeLogo()
-            os._exit(1)
+            Bye()
 
 
     except Exception as e:
         LOG.warning("Board connection call error: {0}".format(e))
-        ByeLogo()
-        os._exit(1)
+        Bye()
 
 
 
@@ -234,6 +228,8 @@ class WampFrontend(ApplicationSession):
         board.session = self
         board.session_id = details.session
         # LOG.debug(" - session: " + str(details))
+
+        global reconnection
 
         if reconnection is False:
 
@@ -265,7 +261,7 @@ class WampFrontend(ApplicationSession):
 
                     if w_msg.result == WM.SUCCESS:
 
-                        LOG.info("Registration authorized by Iotronic: " + str(w_msg.message))
+                        LOG.info("Registration authorized by Iotronic:\n" + str(w_msg.message))
 
                         # the message field contains the board configuration to load
                         board.setConf(w_msg.message)
@@ -277,13 +273,11 @@ class WampFrontend(ApplicationSession):
 
                     else:
                         LOG.error("Registration denied by Iotronic: " + str(w_msg.message))
-                        ByeLogo()
-                        os._exit(1)
+                        Bye()
 
                 except Exception as e:
                     LOG.warning(" - Board registration call error: {0}".format(e))
-                    ByeLogo()
-                    os._exit(1)
+                    Bye()
 
             else:
 
@@ -300,20 +294,33 @@ class WampFrontend(ApplicationSession):
                 elif board.status == "operative":
 
                     # After the WAMP connection stage LR will contact its WAMP agent and load the enabled modules
-                    board.loadSettings()
+                    #board.loadSettings()
                     onBoardConnected(board, self, details)
 
                 else:
                     LOG.error("Wrong board status '"+board.status+"'.")
-                    ByeLogo()
-                    os._exit(1)
+                    Bye()
 
 
         else:
             # If the board is in connection recovery state we need to register again the RPCs of each module
-            yield moduleReloadInfo(self, details)
-            LOG.warning("WAMP session recovered!")
-            LOG.info("\nListening...")
+            reconnection = False
+
+            try:
+                rpc = str(board.agent) + u'.stack4things.connection'
+
+                self.call(rpc, uuid=board.uuid, session=details.session)
+
+                LOG.info("Modules reloading after WAMP recovery...")
+
+                yield moduleReloadInfo(self, details)
+
+                LOG.info("WAMP session recovered!")
+                LOG.info("\nListening...")
+
+            except Exception as e:
+                LOG.warning("Board connection call error after WAMP recovery: {0}".format(e))
+                Bye()
 
     @inlineCallbacks
     def onLeave(self, details):
@@ -327,17 +334,19 @@ class WampClientFactory(websocket.WampWebSocketClientFactory, ReconnectingClient
         ReconnectingClientFactory.clientConnectionFailed(self, connector, reason)
 
     def clientConnectionLost(self, connector, reason):
+
         LOG.warning("Wamp Connection Lost.")
 
         global reconnection
-        if (reconnection is False) & (board.status != "registered"):
+        #if (reconnection is False) & (board.status == "operative"):
+        if board.status == "operative":
             # NORMAL STATE: we need to recover wamp session
             reconnection = True
 
-            LOG.debug("Reconnecting to " + str(connector.getDestination()))
+            LOG.info("Reconnecting to " + str(connector.getDestination().host) + ":" + str(connector.getDestination().port))
             ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
 
-        else:
+        elif (board.status == "registered"):
             # REGISTRATION STATE
             LOG.debug("\n\nReconnecting after registration...\n\n")
 
@@ -347,6 +356,9 @@ class WampClientFactory(websocket.WampWebSocketClientFactory, ReconnectingClient
             # LR has to connect to the assigned WAMP-Agent
             wampConnect(board.wamp_config)
 
+        else:
+            LOG.error("Reconnection wrong status!")
+
 
 def wampConnect(wamp_conf):
 
@@ -355,16 +367,30 @@ def wampConnect(wamp_conf):
     session_factory.session = WampFrontend
 
     transport_factory = WampClientFactory(session_factory, url=wamp_conf['url'])
-    transport_factory.autoPingInterval = 1
-    transport_factory.autoPingTimeout = 1
+    transport_factory.autoPingInterval = 5
+    transport_factory.autoPingTimeout = 5
 
     connector = websocket.connectWS(transport_factory)
 
     LOG.info("WAMP status:")
-    LOG.info(" - establishing connection to " + str(connector.getDestination()))
+    #LOG.info(" - establishing connection to " + str(connector.getDestination()))
+    addr = str(connector.getDestination().host)
+    LOG.info(" - establishing connection to " + addr)
+
+    try:
+        socket.inet_pton(socket.AF_INET, addr)
+        #LOG.info(" - IP validated!")
+    except socket.error as err:
+        LOG.error(" - IP address validation error: " + str(err))
+        Bye()
+
+
+
+
 
 
 class WampManager(object):
+
     def __init__(self, wamp_conf):
 
         wampConnect(wamp_conf)
@@ -396,8 +422,9 @@ class WampManager(object):
         LOG.info("WAMP server stopped!")
 
 
-def ByeLogo():
+def Bye():
     LOG.info("Bye!")
+    os._exit(1)
 
 
 def LogoLR():
@@ -437,6 +464,6 @@ class LightningRod(object):
 
         self.w.stop()
 
-        ByeLogo()
+        Bye()
 
-        os._exit(1)
+

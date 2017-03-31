@@ -128,7 +128,7 @@ class Board(object):
             else:
                 LOG.error("Wamp agent configuration is wrong! "
                           "Please check settings.json WAMP configuration...Bye!")
-                exit()
+                os._exit(1)
 
         LOG.info(' - agent: ' + str(self.agent))
         LOG.info(' - url: ' + str(self.wamp_config['url']))

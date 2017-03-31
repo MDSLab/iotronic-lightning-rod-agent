@@ -6,5 +6,6 @@
 .idea/
 pep8_result.txt
 smartme.py
+smartme.json
 settings.json
 setup.cfg.BKP

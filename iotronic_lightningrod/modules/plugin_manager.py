@@ -21,6 +21,7 @@ import inspect
 import json
 import os
 import shutil
+import time
 from twisted.internet.defer import returnValue
 
 from Queue import Queue
@@ -88,7 +89,9 @@ def getEnabledPlugins():
         if plugins_conf['plugins'][plugin]['callable'] is False:
 
             if plugins_conf['plugins'][plugin]['onboot'] is True:
-                enabledPlugins.append(plugin)
+
+                if plugins_conf['plugins'][plugin]['status'] == "operative":
+                    enabledPlugins.append(plugin)
 
     LOG.info(" - Enabled plugins list: " + str(enabledPlugins))
 
@@ -127,6 +130,7 @@ def RebootOnBootPlugins():
 
             plugins_conf = loadPluginsConf()
             plugin_name = plugins_conf['plugins'][plugin_uuid]['name']
+            plugin_status = plugins_conf['plugins'][plugin_uuid]['status']
 
             try:
 
@@ -260,6 +264,7 @@ class PluginManager(Module.Module):
                 plugins_conf['plugins'][plugin_uuid]['callable'] = callable
                 plugins_conf['plugins'][plugin_uuid]['injected_at'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')
                 plugins_conf['plugins'][plugin_uuid]['updated_at'] = ""
+                plugins_conf['plugins'][plugin_uuid]['status'] = "injected"
 
                 LOG.info("Plugin " + plugin_name + " created!")
                 message = rpc_name + " result: INJECTED"
@@ -270,6 +275,7 @@ class PluginManager(Module.Module):
                 plugins_conf['plugins'][plugin_uuid]['onboot'] = onboot
                 plugins_conf['plugins'][plugin_uuid]['callable'] = callable
                 plugins_conf['plugins'][plugin_uuid]['updated_at'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')
+                plugins_conf['plugins'][plugin_uuid]['status'] = "updated"
 
                 LOG.info("Plugin " + plugin_name + " (" + str(plugin_uuid) + ") updated!")
                 message = rpc_name + " result: UPDATED"
@@ -353,6 +359,12 @@ class PluginManager(Module.Module):
 
                         worker.start()
 
+                        # Apply the changes to plugins.json
+                        with open(PLUGINS_CONF_FILE, 'w') as f:
+                            plugins_conf['plugins'][plugin_uuid]['status'] = 'operative'
+                            json.dump(plugins_conf, f, indent=4)
+
+
                         response = "STARTED"
                         LOG.info(" - " + worker.complete(rpc_name, response))
                         w_msg = yield WM.WampSuccess(response)
@@ -389,8 +401,11 @@ class PluginManager(Module.Module):
         LOG.info("RPC " + rpc_name + " CALLED for '" + plugin_uuid + "' plugin:")
 
         if parameters is not None:
-
             LOG.info(" - " + rpc_name + " parameters: " + str(parameters))
+            if 'delay' in parameters:
+                delay = parameters['delay']
+                LOG.info(" --> stop delay: " + str(delay))
+
 
         try:
 
@@ -400,6 +415,9 @@ class PluginManager(Module.Module):
                 LOG.debug(" - Stopping plugin " + str(worker))
 
                 if worker.isAlive():
+
+                    if 'delay' in parameters:
+                        time.sleep(delay)
 
                     yield worker.stop()
 

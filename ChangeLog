@@ -1,6 +1,7 @@
 CHANGES
 =======
 
+* Plugin Manager updated. Checks for YUN gpio management added
 * Added init.d and systemctl scripts. Some updates in Plugin Manager
 * Added exceptions management: at the moment TimeoutError only. Added plugin APIs. Plugin Manager updated
 * Updated Plugin Manager. Added TimeoutError exception: to improve and move in a specific library

@@ -47,13 +47,20 @@ def sendRequest(url, action, headers=None, body=None, verbose=False):
     :return:
 
     """
-    http = httplib2.Http()
-    headers = headers
-    response, send = http.request(url, action, headers=headers, body=body)
+    try:
+        http = httplib2.Http()
+        headers = headers
+        response, send = http.request(url, action, headers=headers, body=body)
 
-    if verbose:
-        req = json.loads(send)
-        LOG.info("\nREST REQUEST: HTTP " + str(response['status']) + " - success = "+ str(req['success']) + " - " + str(req['result']['records']))
-        #LOG.info("\nREST RESPONSE:\n" + str(response))
+        if verbose:
+            req = json.loads(send)
+            LOG.info("\nREST REQUEST: HTTP " + str(response['status']) + " - success = " + str(req['success']) + " - " + str(
+                    req['result']['records']))
+            # LOG.info("\nREST RESPONSE:\n" + str(response))
+
+    except Exception as err:
+        LOG.error("sendRequest error: " + err)
+
+
 
     return send

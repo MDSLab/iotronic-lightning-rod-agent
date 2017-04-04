@@ -42,7 +42,6 @@ import sys
 from iotronic_lightningrod.Board import Board
 import iotronic_lightningrod.wampmessage as WM
 from iotronic_lightningrod.common.exception import timeoutRPC
-from iotronic_lightningrod.common.exception import TimeoutError
 
 
 # Global variables
@@ -53,7 +52,10 @@ global board
 board = None
 reconnection = False
 RPC = {}
+RPC_devices = {}
 
+
+#from iotronic_lightningrod.modules import device_manager
 
 #@inlineCallbacks
 def moduleReloadInfo(session, details):
@@ -64,15 +66,18 @@ def moduleReloadInfo(session, details):
     :return:
     """
 
+    LOG.info("Modules reloading after WAMP recovery...")
+
     try:
 
         for mod in RPC:
-            LOG.debug("- Module reloaded: " + str(mod))
-            """
-            for meth in RPC[mod]:
-                LOG.debug("   - RPC reloaded: " + str(meth[0]))
-            """
+            LOG.info("- Reloading module RPcs for " + str(mod))
             moduleWampRegister(session, RPC[mod])
+
+        for dev in RPC_devices:
+            LOG.info("- Reloading device RPCs for " + str(dev))
+            moduleWampRegister(session, RPC_devices[dev])
+
 
     except Exception as err:
         LOG.warning("Board modules reloading error: " + str(err))
@@ -87,17 +92,21 @@ def moduleWampRegister(session, meth_list):
     :return:
     """
 
-    for meth in meth_list:
-        # We don't considere the __init__ and finalize methods
-        if (meth[0] != "__init__") & (meth[0] != "finalize"):
+    if len(meth_list) == 2:
 
-            # LOG.debug(" --> " + str(meth[1]))
-            rpc_addr = u'iotronic.' + board.uuid + '.' + meth[0]
-            # LOG.debug(" --> " + str(rpc_addr))
-            session.register(inlineCallbacks(meth[1]), rpc_addr)
-            LOG.info("    --> " + str(meth[0]))
+        LOG.info("   - No procedures to register!")
 
-    LOG.info("   Procedures registered!")
+    else:
+
+        for meth in meth_list:
+            # We don't considere the __init__ and finalize methods
+            if (meth[0] != "__init__") & (meth[0] != "finalize"):
+                rpc_addr = u'iotronic.' + board.uuid + '.' + meth[0]
+                session.register(inlineCallbacks(meth[1]), rpc_addr)
+                LOG.info("   --> " + str(meth[0]))
+                #LOG.info("    --> " + str(rpc_addr))
+
+        #LOG.info("    Procedures registered!")
 
 
 def modulesLoader(session):
@@ -134,7 +143,7 @@ def modulesLoader(session):
             # print(ext.name)
 
             if (ext.name == 'gpio') & (board.type == 'server'):
-                print('- GPIO module disabled for laptop devices')
+                LOG.info('- GPIO module disabled for laptop devices')
 
             else:
                 mod = ext.plugin(board, session)
@@ -146,12 +155,12 @@ def modulesLoader(session):
                 global RPC
                 RPC[mod.name] = meth_list
 
-                if len(meth_list) == 2:  # there is only the "__init__" method of the python module
+                if len(meth_list) == 2:  # there are the"__init__" and "finalize" methods for each module
 
-                    LOG.debug(" - No RPC to register for " + str(ext.name) + " module!")
+                    LOG.info(" - No RPC to register for " + str(ext.name) + " module!")
 
                 else:
-                    LOG.debug(" - RPC list of " + str(mod.name) + ":")
+                    LOG.info(" - RPC list of " + str(mod.name) + ":")
                     moduleWampRegister(SESSION, meth_list)
 
                 # Call the finalize procedure for each module
@@ -162,7 +171,7 @@ def modulesLoader(session):
 
 
 @inlineCallbacks
-def onBoardConnected(board, session, details):
+def IotronicLogin(board, session, details):
     """Function called to connect the board to Iotronic (after the first registration process).
 
     The board:
@@ -175,6 +184,8 @@ def onBoardConnected(board, session, details):
 
     """
 
+    LOG.info("Iotronic Authentication...")
+
     global reconnection
 
     global SESSION
@@ -185,15 +196,13 @@ def onBoardConnected(board, session, details):
         rpc = str(board.agent) + u'.stack4things.connection'
 
         with timeoutRPC(seconds=3, action=rpc):
-            #import time; time.sleep(5)
             res = yield session.call(rpc, uuid=board.uuid, session=details.session)
-
 
         w_msg = WM.deserialize(res)
 
         if w_msg.result == WM.SUCCESS:
 
-            LOG.info("Access granted to Iotronic: " + str(w_msg.message))
+            LOG.info(" - Access granted to Iotronic.") #: " + str(w_msg.message))
 
             # LOADING BOARD MODULES
             try:
@@ -201,19 +210,19 @@ def onBoardConnected(board, session, details):
                 yield modulesLoader(session)
 
             except Exception as e:
-                LOG.warning("WARNING - Could not register procedures: {0}".format(e))
-                Bye()
+                LOG.warning("WARNING - Could not register procedures: " + str(e))
+                #Bye()
 
             # Reset flag to False
             reconnection = False
 
         else:
-            LOG.error("Access denied to Iotronic: " + str(w_msg.message))
+            LOG.error(" - Access denied to Iotronic.") #: " + str(w_msg.message))
             Bye()
 
 
     except exception.ApplicationError as e:
-        LOG.error("Iotronic Connection RPC error: " + str(e) )
+        LOG.error(" - Iotronic Connection RPC error: " + str(e) )
         # Iotronic is offline the board can not call the "stack4things.connection" RPC
         # The board will disconnect from WAMP agent and retry later
         reconnection = True
@@ -221,13 +230,9 @@ def onBoardConnected(board, session, details):
 
 
     except Exception as e:
-        LOG.warning("Iotronic board connection error: {0}".format(e))
-        Bye()
+        LOG.warning("Iotronic board connection error: " + str(e))
+        #Bye()
 
-
-
-def connected():
-    LOG.info("connected to board.connection topic!")
 
 
 class WampFrontend(ApplicationSession):
@@ -244,23 +249,15 @@ class WampFrontend(ApplicationSession):
         # - LIGHTNING-ROD BOOT: the first connection to WAMP after Lightning-rod starting
         # - WAMP RECOVERY: when the established WAMP connection fails
 
-        topic_connection = "board.connection"
-        resSub = yield self.subscribe(connected, topic_connection)
-        LOG.info(" - Subscribed to topic " + topic_connection + ": " + str(resSub))
-        self.publish(topic_connection, '\n\nHello, world!\n\n')
-        """
-
-        LOG.info("\n\n\n\n")
-        LOG.info("Subscribed to topic " + topic_connection + ": " + resSub)
-        
-
-        """
-
-
-
-
-
         global reconnection
+
+        # reconnection flag is False when the board is:
+        # - LIGHTNING-ROD BOOT
+        # - REGISTRATION STATE
+        # - FIRST CONNECTION
+        #
+        # reconnection flag is True when the board is:
+        # - WAMP RECOVERY
 
         global SESSION
         SESSION = self
@@ -269,19 +266,11 @@ class WampFrontend(ApplicationSession):
         board.session_id = details.session
         # LOG.debug(" - session: " + str(details))
 
+        LOG.info(" - Joined in WAMP-Agent:")
+        LOG.info("   - wamp agent: " + str(board.agent))
+        LOG.info("   - session ID: " + str(details.session))
+
         if reconnection is False:
-
-            # reconnection flag is False when the board is:
-            # - LIGHTNING-ROD BOOT
-            # - REGISTRATION STATE
-            # - FIRST CONNECTION
-
-
-            LOG.info(" - Joined in WAMP-Agent:")
-            LOG.info("   - wamp agent: " + str(board.agent))
-            LOG.info("   - session ID: " + str(details.session))
-
-            LOG.info("Lightning-rod initialization starting...")
 
             if board.uuid is None:
 
@@ -323,7 +312,7 @@ class WampFrontend(ApplicationSession):
                         Bye()
 
                 except exception.ApplicationError as e:
-                    LOG.error("Iotronic Registration RPC error: " + str(e))
+                    LOG.error("IoTronic registration error: " + str(e))
                     # Iotronic is offline the board can not call the "stack4things.connection" RPC
                     # The board will disconnect from WAMP agent and retry later
                     reconnection = True # TO ACTIVE BOOT CONNECTION RECOVERY MODE
@@ -347,22 +336,19 @@ class WampFrontend(ApplicationSession):
                     LOG.info("\n\n\nBoard is becoming operative...\n\n\n")
                     board.updateStatus("operative")
                     board.loadSettings()
-                    onBoardConnected(board, self, details)
+                    IotronicLogin(board, self, details)
 
                 elif board.status == "operative":
                     ######################
                     # LIGHTNING-ROD BOOT #
                     ######################
 
-                    # After joining to WAMP agent, Lightning-rod will:
-                    # - log in/authenticate to Iotronic
+                    # After join to WAMP agent, Lightning-rod will:
+                    # - authenticate to Iotronic
                     # - load the enabled modules
 
                     # The board will keep at this tage until it will succeed to connect to Iotronic.
-
-                    #board.loadSettings()
-                    LOG.info("Board connection...")
-                    onBoardConnected(board, self, details)
+                    IotronicLogin(board, self, details)
 
                 else:
                     LOG.error("Wrong board status '"+board.status+"'.")
@@ -370,9 +356,6 @@ class WampFrontend(ApplicationSession):
 
 
         else:
-
-            # reconnection flag is True when the board is:
-            # - WAMP RECOVERY
 
             #################
             # WAMP RECOVERY #
@@ -387,13 +370,11 @@ class WampFrontend(ApplicationSession):
                 with timeoutRPC(seconds=3, action=rpc):
                     res = yield self.call(rpc, uuid=board.uuid, session=details.session)
 
-                LOG.info("Modules reloading after WAMP recovery...")
-
                 w_msg = WM.deserialize(res)
 
                 if w_msg.result == WM.SUCCESS:
 
-                    LOG.info("Access granted to Iotronic: " + str(w_msg.message))
+                    LOG.info("Access granted to Iotronic.") #: " + str(w_msg.message))
 
                     # LOADING BOARD MODULES
                     # If the board is in WAMP connection recovery state
@@ -402,12 +383,12 @@ class WampFrontend(ApplicationSession):
 
                         yield moduleReloadInfo(self, details)
 
-                        LOG.info("WAMP session recovered!")
-
                         # Reset flag to False
                         reconnection = False
 
-                        LOG.info("\nListening...")
+                        LOG.info("WAMP Session Recovered!")
+
+                        LOG.info("\n\nListening...\n\n")
 
 
                     except Exception as e:
@@ -420,34 +401,34 @@ class WampFrontend(ApplicationSession):
 
 
             except exception.ApplicationError as e:
-                LOG.error("Iotronic Connection RPC error: " + str(e))
+                LOG.error("IoTronic connection error: " + str(e))
                 # Iotronic is offline the board can not call the "stack4things.connection" RPC
                 # The board will disconnect from WAMP agent and retry later
                 reconnection = False # TO ACTIVE WAMP CONNECTION RECOVERY MODE
                 self.disconnect()
 
             except Exception as e:
-                LOG.warning("Board connection call error after WAMP recovery: {0}".format(e))
+                LOG.warning("Board connection error after WAMP recovery: {0}".format(e))
                 Bye()
 
     @inlineCallbacks
     def onLeave(self, details):
-        LOG.info('WAMP session left: {}'.format(details))
+        LOG.warning('WAMP Session Left: {}'.format(details))
 
 
 class WampClientFactory(websocket.WampWebSocketClientFactory, ReconnectingClientFactory):
 
     def clientConnectionFailed(self, connector, reason):
-        LOG.warning("Wamp Connection Failed.")
+        LOG.warning("WAMP Connection Failed.")
         ReconnectingClientFactory.clientConnectionFailed(self, connector, reason)
 
     def clientConnectionLost(self, connector, reason):
 
-        LOG.warning("Wamp Connection Lost.")
+        LOG.warning("WAMP Connection Lost.")
 
         global reconnection
 
-        LOG.info("WAMP status:  board = " + str(board.status) + " - reconnection = " + str(reconnection))
+        LOG.warning("WAMP status:  board = " + str(board.status) + " - reconnection = " + str(reconnection))
 
         if board.status == "operative" and reconnection is False:
 

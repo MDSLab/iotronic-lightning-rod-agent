@@ -23,16 +23,16 @@ LOG = logging.getLogger(__name__)
 
 class ServerGpio(Gpio.Gpio):
     def __init__(self):
-        super(ServerGpio, self).__init__("yun")
-        LOG.info("Server gpio module importing...")
+        super(ServerGpio, self).__init__("server")
+        LOG.info("Server GPIO module importing...")
 
     # Enable GPIO
     def EnableGPIO(self):
-        LOG.info(" - EnableGPIO CALLED...")
-        result = '  - Gpio not available for server device!'
+        #LOG.info(" - EnableGPIO CALLED...")
+        result = ' - GPIO not available for server device!'
         LOG.info(result)
 
     def DisableGPIO(self):
-        LOG.info(" - DisableGPIO CALLED...")
-        result = '  - Gpio not available for server device!'
+        #LOG.info(" - DisableGPIO CALLED...")
+        result = ' - GPIO not available for server device!'
         LOG.info(result)

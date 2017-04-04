@@ -21,23 +21,24 @@ from twisted.internet.defer import inlineCallbacks
 from iotronic_lightningrod.config import package_path
 from iotronic_lightningrod.lightningrod import SESSION
 from iotronic_lightningrod.modules import Module
+from iotronic_lightningrod.lightningrod import RPC_devices
 
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
 
 def deviceWampRegister(dev_meth_list, board):
-    LOG.info(" - " + board.type + " device registering RPCs:")
+    LOG.info(" - " + str(board.type).capitalize() + " device registering RPCs:")
 
     for meth in dev_meth_list:
 
-        if (meth[0] != "__init__"):  # We don't considere the __init__ method
+        if (meth[0] != "__init__") & (meth[0] != "finalize"):
             # LOG.info(" - " + str(meth[0]))
             rpc_addr = u'iotronic.' + board.uuid + '.' + meth[0]
             # LOG.debug(" --> " + str(rpc_addr))
             SESSION.register(inlineCallbacks(meth[1]), rpc_addr)
 
-            LOG.info("  --> " + str(meth[0]) + " registered!")
+            LOG.info("   --> " + str(meth[0]) + " registered!")
 
 
 class DeviceManager(Module.Module):
@@ -60,6 +61,8 @@ class DeviceManager(Module.Module):
             device = device_module.System()
 
             dev_meth_list = inspect.getmembers(device, predicate=inspect.ismethod)
+
+            RPC_devices[device_type] = dev_meth_list
 
             deviceWampRegister(dev_meth_list, board)
 

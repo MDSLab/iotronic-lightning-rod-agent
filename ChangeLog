@@ -1,6 +1,7 @@
 CHANGES
 =======
 
+* WAMP Re-Connection failure management updated
 * Plugin Manager updated. systemctl script updated
 * Plugin Manager updated. Checks for YUN gpio management added
 * Added init.d and systemctl scripts. Some updates in Plugin Manager

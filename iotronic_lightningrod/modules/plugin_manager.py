@@ -93,7 +93,8 @@ def getEnabledPlugins():
                 if plugins_conf['plugins'][plugin]['status'] == "operative":
                     enabledPlugins.append(plugin)
 
-    LOG.info(" - Enabled plugins list: " + str(enabledPlugins))
+    if len(enabledPlugins) != 0:
+        LOG.info(" - Enabled plugins list: " + str(enabledPlugins))
 
     return enabledPlugins
 
@@ -122,7 +123,7 @@ def RebootOnBootPlugins():
     if enabledPlugins.__len__() == 0:
 
         message = "No plugin to reboot!"
-        LOG.warning(" - " + message)
+        LOG.info(" - " + message)
 
     else:
 

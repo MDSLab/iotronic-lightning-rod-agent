@@ -32,10 +32,19 @@ def makeNothing():
 
 
 class System(Device.Device):
+
     def __init__(self):
         super(System, self).__init__("server")
 
         server.ServerGpio().EnableGPIO()
+
+    def finalize(self):
+        """Function called at the end of module loading (after RPC registration).
+
+        :return:
+
+        """
+        pass
 
     def testRPC(self):
         rpc_name = whoami()

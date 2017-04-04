@@ -33,6 +33,14 @@ class System(Device.Device):
 
         self.gpio.EnableGPIO()
 
+    def finalize(self):
+        """Function called at the end of module loading (after RPC registration).
+
+        :return:
+
+        """
+        pass
+
     def testLED(self):
         LOG.info(" - testLED CALLED...")
 

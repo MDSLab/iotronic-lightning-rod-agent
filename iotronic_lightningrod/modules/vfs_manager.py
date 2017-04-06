@@ -90,11 +90,24 @@ class VfsManager(Module.Module):
         print(result)
         yield returnValue(result)
 
-    def mountRemote(self, mountSource, mountPoint, boardRemote=None, agentRemote=None):
+    def mountRemote(self,
+                    mountSource,
+                    mountPoint,
+                    boardRemote=None,
+                    agentRemote=None
+                    ):
 
         try:
 
-            mounter = MounterRemote(mountSource, mountPoint, self.board, self.session, boardRemote, agentRemote)
+            mounter = MounterRemote(
+                mountSource,
+                mountPoint,
+                self.board,
+                self.session,
+                boardRemote,
+                agentRemote
+            )
+
             mounter.start()
 
             result = "Mounted " + mountSource + " in " + mountPoint
@@ -138,14 +151,30 @@ class MounterLocal(threading.Thread):
 
         """
         try:
-            FUSE(FuseManager(self.mountSource), self.mountPoint, nothreads=False, foreground=True)
+
+            FUSE(
+                FuseManager(self.mountSource),
+                self.mountPoint,
+                nothreads=False,
+                foreground=True
+            )
+
         except Exception as msg:
             LOG.error("Mounting FUSE error: " + str(msg))
 
 
 class MounterRemote(threading.Thread):
 
-    def __init__(self, mountSource, mountPoint, board, session, boardRemote, agentRemote):
+    def __init__(
+            self,
+            mountSource,
+            mountPoint,
+            board,
+            session,
+            boardRemote,
+            agentRemote
+    ):
+
         threading.Thread.__init__(self)
         # self.setDaemon(1)
         self.setName("VFS-Mounter")  # Set thread name
@@ -158,13 +187,23 @@ class MounterRemote(threading.Thread):
         self.agentRemote = agentRemote
 
     def run(self):
-        """Mount FUSE FS
+        """Mount FUSE FS.
 
         """
         try:
+
             FUSE(
-                FuseRemoteManager(self.mountSource, self.board.agent, self.session, self.boardRemote, self.agentRemote),
-                self.mountPoint, nothreads=False, foreground=True)
+                FuseRemoteManager(
+                    self.mountSource,
+                    self.board.agent,
+                    self.session,
+                    self.boardRemote,
+                    self.agentRemote
+                ),
+                self.mountPoint,
+                nothreads=False,
+                foreground=True
+            )
 
         except Exception as msg:
             LOG.error("Mounting FUSE error: " + str(msg))
@@ -191,7 +230,8 @@ class FuseRemoteManager(Operations):
         self.boardRemote = boardRemote
         self.agentRemote = agentRemote
 
-        # makeCall("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU", self.agent, self.session)  # TEMPORARY
+        # makeCall("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU",
+        # self.agent, self.session)  # TEMPORARY
 
     def join_path(self, partial):
         if partial.startswith("/"):
@@ -219,9 +259,20 @@ class FuseRemoteManager(Operations):
     def getattr(self, path, fh=None):
         full_path = self.join_path(path)
         st = os.lstat(full_path)
-        return dict((key, getattr(st, key)) for key in ('st_atime', 'st_ctime',
-                                                        'st_gid', 'st_mode', 'st_mtime',
-                                                        'st_nlink', 'st_size', 'st_uid'))
+        attr = dict((key, getattr(st, key))
+                    for key in (
+                        'st_atime',
+                        'st_ctime',
+                        'st_gid',
+                        'st_mode',
+                        'st_mtime',
+                        'st_nlink',
+                        'st_size',
+                        'st_uid'
+                        )
+                    )
+
+        return attr
 
     def readdir(self, path, fh):
         full_path = self.join_path(path)
@@ -253,10 +304,20 @@ class FuseRemoteManager(Operations):
     def statfs(self, path):
         full_path = self.join_path(path)
         stv = os.statvfs(full_path)
-        return dict((key, getattr(stv, key)) for key in ('f_bavail', 'f_bfree',
-                                                         'f_blocks', 'f_bsize', 'f_favail',
-                                                         'f_ffree', 'f_files', 'f_flag',
-                                                         'f_frsize', 'f_namemax'))
+        stat = dict((key, getattr(stv, key))
+                    for key in ('f_bavail',
+                                'f_bfree',
+                                'f_blocks',
+                                'f_bsize',
+                                'f_favail',
+                                'f_ffree',
+                                'f_files',
+                                'f_flag',
+                                'f_frsize',
+                                'f_namemax'
+                                )
+                    )
+        return stat
 
     def unlink(self, path):
         return os.unlink(self.join_path(path))
@@ -338,9 +399,20 @@ class FuseManager(Operations):
     def getattr(self, path, fh=None):
         full_path = self.join_path(path)
         st = os.lstat(full_path)
-        return dict((key, getattr(st, key)) for key in ('st_atime', 'st_ctime',
-                                                        'st_gid', 'st_mode', 'st_mtime',
-                                                        'st_nlink', 'st_size', 'st_uid'))
+        attr = dict((key, getattr(st, key))
+                    for key in (
+                        'st_atime',
+                        'st_ctime',
+                        'st_gid',
+                        'st_mode',
+                        'st_mtime',
+                        'st_nlink',
+                        'st_size',
+                        'st_uid'
+                        )
+                    )
+
+        return attr
 
     def readdir(self, path, fh):
         full_path = self.join_path(path)
@@ -372,10 +444,20 @@ class FuseManager(Operations):
     def statfs(self, path):
         full_path = self.join_path(path)
         stv = os.statvfs(full_path)
-        return dict((key, getattr(stv, key)) for key in ('f_bavail', 'f_bfree',
-                                                         'f_blocks', 'f_bsize', 'f_favail',
-                                                         'f_ffree', 'f_files', 'f_flag',
-                                                         'f_frsize', 'f_namemax'))
+        stat = dict((key, getattr(stv, key))
+                    for key in ('f_bavail',
+                                'f_bfree',
+                                'f_blocks',
+                                'f_bsize',
+                                'f_favail',
+                                'f_ffree',
+                                'f_files',
+                                'f_flag',
+                                'f_frsize',
+                                'f_namemax'
+                                )
+                    )
+        return stat
 
     def unlink(self, path):
         return os.unlink(self.join_path(path))

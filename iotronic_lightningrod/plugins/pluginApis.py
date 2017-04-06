@@ -22,8 +22,6 @@ from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
 
-
-
 def getBoardID():
     return board.uuid
 
@@ -39,28 +37,27 @@ def getBoardGpio():
 def sendRequest(url, action, headers=None, body=None, verbose=False):
     """Generic REST client for plugin users.
 
-    :param url:
-    :param action
-    :param headers:
-    :param data:
-    :param verbose:
+    :param url: resource URI
+    :param action: POST, GET, PUT, etc
+    :param headers: request header
+    :param data: request body
+    :param verbose: flag to enable/disable verbose output
     :return:
 
     """
     try:
+
         http = httplib2.Http()
         headers = headers
         response, send = http.request(url, action, headers=headers, body=body)
 
         if verbose:
             req = json.loads(send)
-            LOG.info("\nREST REQUEST: HTTP " + str(response['status']) + " - success = " + str(req['success']) + " - " + str(
-                    req['result']['records']))
-            # LOG.info("\nREST RESPONSE:\n" + str(response))
+            LOG.info("\nREST REQUEST: HTTP " + str(response['status'])
+                     + " - success = " + str(req['success'])
+                     + " - " + str(req['result']['records']))
 
     except Exception as err:
-        LOG.error("sendRequest error: " + err)
-
-
+        LOG.error("sendRequest error: " + str(err))
 
     return send

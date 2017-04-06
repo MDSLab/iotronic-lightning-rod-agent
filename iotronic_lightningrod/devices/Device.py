@@ -32,6 +32,5 @@ class Device(object):
     def __init__(self, device_type):
         self.device_type = device_type
 
-
     def finalize(self):
         pass

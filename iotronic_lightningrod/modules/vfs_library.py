@@ -53,9 +53,20 @@ class FuseLib(object):
     def getattr(self, path, fh=None):
         full_path = self._full_path(path)
         st = os.lstat(full_path)
-        return dict((key, getattr(st, key)) for key in ('st_atime', 'st_ctime',
-                                                        'st_gid', 'st_mode', 'st_mtime',
-                                                        'st_nlink', 'st_size', 'st_uid'))
+        attr = dict((key, getattr(st, key))
+                    for key in (
+                        'st_atime',
+                        'st_ctime',
+                        'st_gid',
+                        'st_mode',
+                        'st_mtime',
+                        'st_nlink',
+                        'st_size',
+                        'st_uid'
+                        )
+                    )
+
+        return attr
 
     def readdir(self, path, fh):
         full_path = self._full_path(path)
@@ -87,10 +98,20 @@ class FuseLib(object):
     def statfs(self, path):
         full_path = self._full_path(path)
         stv = os.statvfs(full_path)
-        return dict((key, getattr(stv, key)) for key in ('f_bavail', 'f_bfree',
-                                                         'f_blocks', 'f_bsize', 'f_favail',
-                                                         'f_ffree', 'f_files', 'f_flag',
-                                                         'f_frsize', 'f_namemax'))
+        stat = dict((key, getattr(stv, key))
+                    for key in ('f_bavail',
+                                'f_bfree',
+                                'f_blocks',
+                                'f_bsize',
+                                'f_favail',
+                                'f_ffree',
+                                'f_files',
+                                'f_flag',
+                                'f_frsize',
+                                'f_namemax'
+                                )
+                    )
+        return stat
 
     def unlink(self, path):
         return os.unlink(self._full_path(path))

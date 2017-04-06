@@ -52,7 +52,8 @@ class System(Device.Device):
 
     def setGPIOs(self, Dpin, direction, value):
 
-        LOG.info(" - setGPIOs CALLED... digital pin " + Dpin + " (GPIO n. " + self.gpio.MAPPING[Dpin] + ")")
+        LOG.info(" - setGPIOs CALLED... digital pin " + Dpin
+                 + " (GPIO n. " + self.gpio.MAPPING[Dpin] + ")")
 
         result = yield self.gpio._setGPIOs(Dpin, direction, value)
         LOG.info(result)
@@ -64,6 +65,8 @@ class System(Device.Device):
         """
         LOG.info(" - readVoltage CALLED... reading pin " + Apin)
 
-        result = yield "read voltage for " + Apin + " pin: " + self.gpio._readVoltage(Apin)
+        voltage = self.gpio._readVoltage(Apin)
+
+        result = yield "read voltage for " + Apin + " pin: " + voltage
         LOG.info(result)
         returnValue(result)

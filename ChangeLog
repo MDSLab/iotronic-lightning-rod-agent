@@ -1,6 +1,7 @@
 CHANGES
 =======
 
+* Plugin Manager updated. Device modules updated. Reconnection management improved
 * WAMP Re-Connection failure management updated
 * Plugin Manager updated. systemctl script updated
 * Plugin Manager updated. Checks for YUN gpio management added

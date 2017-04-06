@@ -13,15 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-import signal
 import os
+import signal
+
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
-
-
-
-
 
 
 def manageTimeout(error_message, action):
@@ -35,8 +31,6 @@ def manageTimeout(error_message, action):
         os._exit(1)
 
 
-
-
 class TimeoutError(Exception):
 
     def __init__(self, message, action):
@@ -45,49 +39,41 @@ class TimeoutError(Exception):
 
         # Now for your custom code...
         self.action = action
-        #print self.action
 
-class timeout:
+
+class timeout(object):
 
     def __init__(self, seconds=1, error_message='Timeout', action=None):
-        #print "init_exc"
         self.seconds = seconds
         self.error_message = error_message
         self.action = action
 
     def handle_timeout(self, signum, frame):
-        #print "raise_exc"
         raise TimeoutError(self.error_message, self.action)
 
     def __enter__(self):
-        #print "enter_exc"
         signal.signal(signal.SIGALRM, self.handle_timeout)
         signal.alarm(self.seconds)
 
     def __exit__(self, type, value, traceback):
-        #print "exit_exc"
         signal.alarm(0)
 
 
-class timeoutRPC:
+class timeoutRPC(object):
 
     def __init__(self, seconds=1, error_message='Timeout', action=None):
-        #print "init_exc"
         self.seconds = seconds
         self.error_message = error_message
         self.action = action
 
     def handle_timeout(self, signum, frame):
-        #print "raise_exc"
         manageTimeout(self.error_message, self.action)
-        #LOG.warning("RPC timeout: " + str(self.error_message))
-        #os._exit(1)
+        # LOG.warning("RPC timeout: " + str(self.error_message))
+        # os._exit(1)
 
     def __enter__(self):
-        #print "enter_exc"
         signal.signal(signal.SIGALRM, self.handle_timeout)
         signal.alarm(self.seconds)
 
     def __exit__(self, type, value, traceback):
-        #print "exit_exc"
         signal.alarm(0)

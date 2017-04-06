@@ -35,7 +35,6 @@ def sendNotification(msg=None):
 """
 
 
-
 @six.add_metaclass(abc.ABCMeta)
 class Plugin(threading.Thread):
 
@@ -79,7 +78,6 @@ class Plugin(threading.Thread):
 
     def complete(self, rpc_name, result):
         self.setStatus(result)
-        # result = rpc_name + " result for '" + self.name + "' ("+self.uuid+") : " + self.checkStatus()
         result = rpc_name + " result: " + self.checkStatus()
 
         return result

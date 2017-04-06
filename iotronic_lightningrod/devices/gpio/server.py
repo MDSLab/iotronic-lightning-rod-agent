@@ -28,11 +28,9 @@ class ServerGpio(Gpio.Gpio):
 
     # Enable GPIO
     def EnableGPIO(self):
-        #LOG.info(" - EnableGPIO CALLED...")
         result = ' - GPIO not available for server device!'
         LOG.info(result)
 
     def DisableGPIO(self):
-        #LOG.info(" - DisableGPIO CALLED...")
         result = ' - GPIO not available for server device!'
         LOG.info(result)

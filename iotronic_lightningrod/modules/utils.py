@@ -79,7 +79,9 @@ class Utility(Module.Module):
         with open(entry_points_name, 'a') as entry_points:
             entry_points.write(
                 new_module +
-                '= iotronic_lightningrod.modules.' + new_module + ':' + new_class)
+                '= iotronic_lightningrod.modules.' + new_module + ':'
+                + new_class
+            )
 
             # Reload entry_points
             refresh_stevedore('s4t.modules')

@@ -20,6 +20,10 @@ import time
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
+i2c_path = "/sys/devices/mcuio/0:0.0/0:1.4/i2c-0"
+device1_path = i2c_path + "/0-0060/iio:device1/"
+device0_path = "/sys/bus/iio/devices/iio:device0/"
+
 
 class YunGpio(Gpio.Gpio):
 
@@ -39,13 +43,10 @@ class YunGpio(Gpio.Gpio):
             'D12': '122',
             'D6': '123'}
 
-
         # LOG.info("Arduino YUN gpio module importing...")
 
     def EnableGPIO(self):
         """Enable GPIO (device0).
-
-        :return:
 
         """
         try:
@@ -62,8 +63,6 @@ class YunGpio(Gpio.Gpio):
     def DisableGPIO(self):
         """Disable GPIO (device0).
 
-        :return:
-
         """
         try:
             with open('/sys/bus/iio/devices/iio:device0/enable', 'a') as f:
@@ -76,6 +75,7 @@ class YunGpio(Gpio.Gpio):
 
     def EnableI2c(self):
         """Enable i2c device (device1).
+
         From ideino-linino-lib library:
             Board.prototype.addI2c = function(name, driver, addr, bus)
                 board.addI2c('BAR', 'mpl3115', '0x60', 0):
@@ -84,46 +84,54 @@ class YunGpio(Gpio.Gpio):
                 - i2c_device.name: BAR
                 - i2c_device.bus: 0
 
-        :return:
-
         """
 
         try:
+
             if os.path.exists('/sys/bus/i2c/devices/i2c-0/0-0060'):
                 result = "  - I2C device already enabled!"
+
             else:
 
                 with open('/sys/bus/i2c/devices/i2c-0/new_device', 'a') as f:
-                    #'echo '+i2c_device.driver+' '+i2c_device.addr+ '
+                    # 'echo '+i2c_device.driver+' '+i2c_device.addr+ '
                     f.write('mpl3115 0x60')
                     result = "  - I2C device enabled!"
 
             LOG.info(result)
+
         except Exception as err:
             LOG.error("Error enabling I2C (device1): " + str(err))
 
     def i2cRead(self, sensor):
         """Read i2c raw value.
 
-            sensor options:
-            - in_pressure_raw
-            - in_temp_raw
+        sensor options:
+        - in_pressure_raw
+        - in_temp_raw
 
-        :return:
+        :param sensor: name of the sensor connected to I2C port
+        :return: I2C raw value
 
         """
         try:
-            with open("/sys/devices/mcuio/0:0.0/0:1.4/i2c-0/0-0060/iio:device1/in_" + sensor + "_raw") as raw:
+
+            with open(device1_path + "in_" + sensor + "_raw") as raw:
                 value = raw.read()
-                # print("I2C VALUE: " + value)
+
         except Exception as err:
             LOG.error("Error reading I2C device: " + str(err))
             value = None
 
         return value
 
-
     def setPIN(self, DPIN, value):
+        """Function to set digital PIN value.
+
+        :param DPIN: pin
+        :param value: value to set the pin
+
+        """
         try:
             with open('/sys/class/gpio/' + DPIN + '/value', 'a') as f:
                 f.write(value)
@@ -155,15 +163,14 @@ class YunGpio(Gpio.Gpio):
             with open('/sys/class/gpio/export', 'a') as f_export:
                 f_export.write(self.MAPPING[Dpin])
 
-            with open('/sys/class/gpio/' + Dpin + '/direction', 'a') as f_direction:
-                f_direction.write(direction)
+            with open('/sys/class/gpio/' + Dpin + '/direction', 'a') as f_dir:
+                f_dir.write(direction)
 
             with open('/sys/class/gpio/' + Dpin + '/value', 'a') as f_value:
                 f_value.write(value)
 
             with open('/sys/class/gpio/' + Dpin + '/value') as f_value:
                 result = "PIN " + Dpin + " value " + f_value.read()
-                # print(result)
 
         except Exception as err:
             LOG.error("Error setting GPIO value: " + str(err))
@@ -174,9 +181,10 @@ class YunGpio(Gpio.Gpio):
     def _readVoltage(self, pin):
 
         try:
-            with open("/sys/bus/iio/devices/iio:device0/in_voltage_" + pin + "_raw") as raw:
+            with open(device0_path + "in_voltage_" + pin + "_raw") as raw:
                 voltage = raw.read()
                 # print("VOLTAGE: " + voltage)
+
         except Exception as err:
             LOG.error("Error reading voltage: " + str(err))
             voltage = None
@@ -186,7 +194,8 @@ class YunGpio(Gpio.Gpio):
     def blinkLed(self):
         """LED: 13. There is a built-in LED connected to digital pin 13.
 
-        When the pin is HIGH value, the LED is on, when the pin is LOW, it's off.
+        When the pin has HIGH value, the LED is on,
+        when the pin has LOW value, it is off.
 
         """
         with open('/sys/class/gpio/export', 'a') as f:

@@ -18,7 +18,8 @@ import os
 import pkg_resources
 
 dist = pkg_resources.get_distribution(__package__)
-entry_points_name = os.path.join(dist.location, dist.egg_name()) + ".egg-info/entry_points.txt"
+entry_points_name = \
+    os.path.join(dist.location, dist.egg_name()) + ".egg-info/entry_points.txt"
 
 # Iotronic python package folder
 package_path = os.path.join(dist.location, __package__)

@@ -119,15 +119,18 @@ class Board(object):
         '''
         try:
             self.wamp_config = config['iotronic']['wamp']['main-agent']
-            LOG.info('Wamp Agent settings:')
+            LOG.info('WAMP Agent settings:')
 
         except Exception:
             if (self.status is None) | (self.status == "registered"):
-                self.wamp_config = config['iotronic']['wamp']['registration-agent']
+                self.wamp_config = \
+                    config['iotronic']['wamp']['registration-agent']
                 LOG.info('Registration Agent settings:')
             else:
-                LOG.error("Wamp agent configuration is wrong! "
-                          "Please check settings.json WAMP configuration...Bye!")
+                LOG.error(
+                    "WAMP Agent configuration is wrong... "
+                    "please check settings.json WAMP configuration... Bye!"
+                )
                 os._exit(1)
 
         LOG.info(' - agent: ' + str(self.agent))
@@ -147,8 +150,6 @@ class Board(object):
     def updateStatus(self, status):
         self.iotronic_config['iotronic']['board']["status"] = status
 
-        # self.iotronic_config['iotronic']['board']["updated_at"] = self.updated_at
-
         with open(SETTINGS, 'w') as f:
             json.dump(self.iotronic_config, f, indent=4)
 
@@ -157,7 +158,8 @@ class Board(object):
         return datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')
 
     def setUpdateTime(self):
-        self.iotronic_config['iotronic']['board']["updated_at"] = self.updated_at
+        self.iotronic_config['iotronic']['board']["updated_at"] = \
+            self.updated_at
 
         with open(SETTINGS, 'w') as f:
             json.dump(self.iotronic_config, f, indent=4)

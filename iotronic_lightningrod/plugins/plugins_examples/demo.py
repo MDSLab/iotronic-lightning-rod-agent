@@ -31,13 +31,13 @@ Rb = 10000
 Ginf = 120.6685
 
 # User global variables
-# board_uuid = ebec5fe9-cfed-5c78-ccb3-33978a6a064d Ingegneria-dev-14
-resource_id = "fccd5470-e5ed-4350-9aae-4419dd86264c"  # temperature resource id
+resource_id = ""  # temperature resource id
 action_URL = "http://smartme-data.unime.it/api/3/action/datastore_upsert"
-
-api_key = '22c5cfa7-9dea-4dd9-9f9d-eedf296852ae'
-headers = {"Content-Type": "application/json", 'Authorization': "" + api_key + ""}
-
+api_key = ''
+headers = {
+    "Content-Type": "application/json",
+    'Authorization': "" + api_key + ""
+}
 polling_time = 10
 
 
@@ -51,22 +51,20 @@ class Worker(Plugin.Plugin):
 
         while (self._is_running):
 
-            m_timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')
-
             voltage = device._readVoltage("A0")
 
             Rthermistor = float(Rb) * (float(ADCres) / float(voltage) - 1)
-            rel_temp = float(Beta) / (math.log(float(Rthermistor) * float(Ginf)))
+
+            rel_temp = float(Beta) / (math.log(
+                float(Rthermistor) * float(Ginf))
+            )
             temp = rel_temp - Kelvin
 
             m_value = str(temp)
+            m_timestamp = datetime.datetime.now().strftime(
+                '%Y-%m-%dT%H:%M:%S.%f'
+            )
 
-            ckan_data = '{"resource_id":"' + str(resource_id) + '", "method":"insert", ' \
-                '"records":[{"Latitude":"38.2597708","Altitude":"0","Longitude":"15.5966863",' \
-                '"Temperature":"' + m_value + '","Date":"' + m_timestamp + '"}]}'
-
-            self.sendRequest(url=action_URL, headers=headers, data=ckan_data, verbose=False)
-
-            LOG.info("\nMEASURE SENT TO CKAN: \n" + ckan_data)
+            LOG.info(m_value + " - " + m_timestamp)
 
             time.sleep(polling_time)

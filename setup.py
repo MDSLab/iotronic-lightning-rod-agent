@@ -30,10 +30,14 @@ setuptools.setup(
 
     entry_points={
         's4t.modules': [
-            'utility = iotronic_lightningrod.modules.utils:Utility',
-            'plugin = iotronic_lightningrod.modules.plugin_manager:PluginManager',
-            'device = iotronic_lightningrod.modules.device_manager:DeviceManager',
-            'vfs = iotronic_lightningrod.modules.vfs_manager:VfsManager',
+            'utility = '
+            'iotronic_lightningrod.modules.utils:Utility',
+            'plugin = '
+            'iotronic_lightningrod.modules.plugin_manager:PluginManager',
+            'device = '
+            'iotronic_lightningrod.modules.device_manager:DeviceManager',
+            'vfs = '
+            'iotronic_lightningrod.modules.vfs_manager:VfsManager',
         ]
 
     },

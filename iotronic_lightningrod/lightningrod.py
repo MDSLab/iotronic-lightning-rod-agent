@@ -669,3 +669,7 @@ class LightningRod(object):
         self.w.stop()
 
         Bye()
+
+
+def main():
+    lr = LightningRod()

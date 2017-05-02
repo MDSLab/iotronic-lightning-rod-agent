@@ -602,7 +602,7 @@ class WampManager(object):
         reactor.run()
 
         """
-        # PROVVISORIO ------------------------------------------------------
+        # TEMPORARY ------------------------------------------------------
         from subprocess import call
         LOG.debug("Unmounting...")
 

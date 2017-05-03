@@ -1,6 +1,0 @@
-{
-    "polling" : "100",
-    "ckan_enabled" : false,
-    "temperature": { "pin" : "A0", "enabled":true },
-    "brightness": { "pin" : "A1", "enabled":true }
-}

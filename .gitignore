@@ -5,8 +5,9 @@
 .tox/
 .idea/
 pep8_result.txt
-smartme.py
-smartme.json
+smartme.*
+monasca.*
+led.*
 settings.json
 setup.cfg.BKP
 setup.py.BKP

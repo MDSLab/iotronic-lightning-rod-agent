@@ -6,7 +6,7 @@
 .idea/
 pep8_result.txt
 smartme.*
-monasca.*
+monasca*
 led.*
 settings.json
 setup.cfg.BKP
@@ -16,3 +16,4 @@ build
 AUTHORS
 Authors
 ChangeLog
+*.md

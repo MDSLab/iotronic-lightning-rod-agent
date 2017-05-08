@@ -11,7 +11,9 @@ board-side probe.
 * Source: https://github.com/openstack/iotronic-lightning-rod
 * Bugs: https://bugs.launchpad.net/iotronic-lightning-rod
 
-Features
---------
+Installation guides
+-------------------
 
-* TODO
+* `Arduino YUN <https://github.com/MDSLab/iotronic-lightning-rod-agent/blob/master/doc/installation/arduino_yun.rst>`_.
+
+* `Ubuntu 16.04 <https://github.com/MDSLab/iotronic-lightning-rod-agent/blob/master/doc/installation/ubuntu1604.rst>`_.

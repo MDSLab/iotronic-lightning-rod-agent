@@ -10,17 +10,9 @@ Install from source code via Git
 Install requirements
 ''''''''''''''''''''
 
--  Install dependencies via apt-get:
+::
 
-   ::
-
-       apt -y install git
-
--  Install pip dependencies:
-
-   ::
-
-       pip install oslo-config oslo_log twisted autobahn httplib2
+    pip install oslo-config oslo_log twisted autobahn httplib2
 
 Set up environment:
 '''''''''''''''''''

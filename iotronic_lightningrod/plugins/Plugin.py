@@ -43,7 +43,7 @@ class Plugin(threading.Thread):
         threading.Thread.__init__(self)
         # self.setDaemon(1)
         self.setName("Plugin " + str(self.name))  # Set thread name
-        print "Plugin Name: " + self.name
+        LOG.debug("Plugin Name: " + self.name)
 
         self.uuid = uuid
         self.name = name

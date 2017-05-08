@@ -8,45 +8,46 @@ Install from source code via Git
 --------------------------------
 
 Install requirements
-''''''''''''''''''''
+~~~~~~~~~~~~~~~~~~~~
 
 ::
 
     pip install oslo-config oslo_log twisted autobahn httplib2
 
 Set up environment:
-'''''''''''''''''''
+~~~~~~~~~~~~~~~~~~~
 
--  create folders
+::
 
-   ::
+    mkdir -p /var/lib/iotronic
+    mkdir /var/lib/iotronic/plugins
+    mkdir /var/log/iotronic/
+    mkdir /etc/iotronic
 
-       mkdir -p /var/lib/iotronic
-       mkdir /var/lib/iotronic/plugins
-       mkdir /var/log/iotronic/
-       mkdir /etc/iotronic
+Install Lightning-rod
+~~~~~~~~~~~~~~~~~~~~~
 
-Installation
-''''''''''''
+Get source code
+'''''''''''''''
 
--  Get source code
+::
 
-   ::
+    cd /var/lib/iotronic
+    git clone git://github.com/MDSLab/iotronic-lightning-rod-agent.git
+    mv iotronic-lightning-rod-agent/ iotronic-lightning-rod/
 
-       cd /var/lib/iotronic
-       git clone git://github.com/openstack/iotronic-lightning-rod.git
-       cd iotronic-lightning-rod/
+Deployment
+''''''''''
 
--  Deployment
+::
 
-   ::
-
-       cp etc/iotronic/iotronic.conf  /etc/iotronic/
-       cp settings.example.json /var/lib/iotronic/settings.json
-       cp plugins.example.json /var/lib/iotronic/plugins.json
-       cp etc/systemd/system/s4t-lightning-rod.service /etc/systemd/system/lightning-rod.service
-       chmod +x /etc/systemd/system/lightning-rod.service
-       systemctl daemon-reload
+    cd iotronic-lightning-rod/
+    cp etc/iotronic/iotronic.conf  /etc/iotronic/
+    cp settings.example.json /var/lib/iotronic/settings.json
+    cp plugins.example.json /var/lib/iotronic/plugins.json
+    cp etc/systemd/system/s4t-lightning-rod.service /etc/systemd/system/lightning-rod.service
+    chmod +x /etc/systemd/system/lightning-rod.service
+    systemctl daemon-reload
 
 -  Edit configuration file:
 
@@ -81,15 +82,16 @@ Installation
        maxsize 5M
        }
 
--  Building
+Building
+''''''''
 
-   ::
+::
 
-       cd /var/lib/iotronic/iotronic-lightning-rod/
-       python setup.py install
+    cd /var/lib/iotronic/iotronic-lightning-rod/
+    python setup.py install
 
 Execution:
-''''''''''
+~~~~~~~~~~
 
 ::
 

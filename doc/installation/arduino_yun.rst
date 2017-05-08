@@ -8,100 +8,131 @@ Install from source code via Git
 --------------------------------
 
 Install requirements
+~~~~~~~~~~~~~~~~~~~~
+
+Install Python and PIP:
+'''''''''''''''''''''''
+
+::
+
+    opkg update
+    opkg install python-setuptools
+    easy_install pip
+
+Install dependencies
 ''''''''''''''''''''
 
--  Install Python and PIP:
+::
 
-   ::
+    opkg install git bzip2 python-netifaces
+    pip install --no-cache-dir zope.interface pyserial Babel oslo.config oslo.log
+    easy_install httplib2
 
-       opkg update
-       opkg install python-setuptools
-       easy_install pip
-
--  Install dependencies
-
-   ::
-
-       opkg install git bzip2 python-netifaces
-       pip install --no-cache-dir zope.interface pyserial Babel oslo.config oslo.log
-       easy_install httplib2
-
--  Install Autobahn: \`\`\` Install Twisted:
-
-wget –no-check-certificate
-https://pypi.python.org/packages/source/T/Twisted/Twisted-14.0.2.tar.bz2
-bzip2 -d Twisted-14.0.2.tar.bz2 tar -xvf Twisted-14.0.2.tar cd
-Twisted-14.0.2/ vi setup.py
-
-comment line 63: #conditionalExtensions=getExtensions(),
-
-python setup.py install cd /opt/ rm -rf /opt/Twisted-14.0.2\*
-
-easy\_install autobahn
+Install Autobahn:
+'''''''''''''''''
 
 ::
 
+    # Install Twisted:
+    wget --no-check-certificate https://pypi.python.org/packages/source/T/Twisted/Twisted-14.0.2.tar.bz2
+    bzip2 -d Twisted-14.0.2.tar.bz2
+    tar -xvf Twisted-14.0.2.tar
+    cd Twisted-14.0.2/
+    vi setup.py
 
-    ##### Set up environment:
-    * Create folders
+    comment line 63:
+        #conditionalExtensions=getExtensions(),
 
-mkdir -p /var/lib/iotronic mkdir /var/lib/iotronic/plugins mkdir
-/var/log/iotronic/ mkdir /etc/iotronic
-
-::
-
-
-    ##### Install Lightning-rod
-
-    * Get source code
-
-cd /var/lib/iotronic git clone
-git://github.com/MDSLab/iotronic-lightning-rod-agent.git mv
-iotronic-lightning-rod-agent/ iotronic-lightning-rod/
+    python setup.py install
+    cd /opt/
+    rm -rf /opt/Twisted-14.0.2*
 
 ::
 
-    * Deployment
+    easy_install autobahn
 
-cd iotronic-lightning-rod/ cp etc/iotronic/iotronic.conf /etc/iotronic/
-cp settings.example.json /var/lib/iotronic/settings.json cp
-plugins.example.json /var/lib/iotronic/plugins.json cp
-etc/init.d/lightning-rod /etc/init.d/lightning-rod chmod +x
-/etc/init.d/lightning-rod touch /var/log/iotronic/lightning-rod.log
+Set up environment:
+~~~~~~~~~~~~~~~~~~~
 
 ::
 
+    mkdir -p /var/lib/iotronic
+    mkdir /var/lib/iotronic/plugins
+    mkdir /var/log/iotronic/
+    mkdir /etc/iotronic
 
-    * Edit configuration file:
+Install Lightning-rod
+~~~~~~~~~~~~~~~~~~~~~
 
-    nano /var/lib/iotronic/settings.json
-
-{ “iotronic”: { “board”: { “token”: “” }, “wamp”: {
-“registration-agent”: { “url”: “ws://:/”, “realm”: “” } } } }
-
-::
-
-
-    * Set up logrotate: 
-
-    nano /etc/logrotate.d/lightning-rod.log
-
-/var/log/iotronic/lightning-rod.log { weekly rotate = 3 compress su root
-root maxsize 5M }
+Get source code
+'''''''''''''''
 
 ::
 
+    cd /var/lib/iotronic
+    git clone git://github.com/MDSLab/iotronic-lightning-rod-agent.git
+    mv iotronic-lightning-rod-agent/ iotronic-lightning-rod/
 
-
-    * Building
-
-cd /var/lib/iotronic/iotronic-lightning-rod/ python setup.py install
+Deployment
+''''''''''
 
 ::
 
+    cd iotronic-lightning-rod/
+    cp etc/iotronic/iotronic.conf  /etc/iotronic/
+    cp settings.example.json /var/lib/iotronic/settings.json
+    cp plugins.example.json /var/lib/iotronic/plugins.json
+    cp etc/init.d/lightning-rod /etc/init.d/lightning-rod
+    chmod +x /etc/init.d/lightning-rod
+    touch /var/log/iotronic/lightning-rod.log
 
-    ##### Execution:
+-  Edit configuration file:
 
-/etc/init.d/lightning-rod restart
+nano /var/lib/iotronic/settings.json
 
-tail -f /var/log/iotronic/lightning-rod.log \`\`\` 
+::
+
+    {
+     "iotronic": {
+       "board": {
+         "token": "<REGISTRATION-TOKEN>"
+       },
+       "wamp": {
+         "registration-agent": {
+           "url": "ws://<WAMP-SERVER>:<WAMP-PORT>/",
+           "realm": "<IOTRONIC-REALM>"
+         }
+       }
+     }
+    }
+
+-  Set up logrotate:
+
+nano /etc/logrotate.d/lightning-rod.log
+
+::
+
+    /var/log/iotronic/lightning-rod.log {
+        weekly
+        rotate = 3
+        compress
+        su root root
+        maxsize 5M
+    }
+
+Building
+''''''''
+
+::
+
+    cd /var/lib/iotronic/iotronic-lightning-rod/
+    python setup.py install
+
+Execution:
+~~~~~~~~~~
+
+::
+
+    /etc/init.d/lightning-rod restart
+
+    tail -f /var/log/iotronic/lightning-rod.log

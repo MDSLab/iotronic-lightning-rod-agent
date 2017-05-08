@@ -1,11 +1,11 @@
-IoTronic Lightning-rod installation guide for Ubuntu 16.04
-==========================================================
+IoTronic Lightning-rod installation guide for Arduino YUN
+=========================================================
 
-We tested this procedure on a Ubuntu 16.04 (also within a LXD
-container). Everything needs to be run as root.
+We tested this procedure on a Arduino YUN board with OpenWRT LininoIO
+image.
 
-Install from source code via Git
---------------------------------
+Install from source code
+------------------------
 
 Install requirements
 ~~~~~~~~~~~~~~~~~~~~

@@ -761,7 +761,6 @@ class PluginManager(Module.Module):
                         LOG.info(" - plugin restarting with parameters:")
                         LOG.info("   " + str(plugin_params))
 
-
                     worker = task.Worker(
                         plugin_uuid,
                         plugin_name,

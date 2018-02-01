@@ -4,7 +4,6 @@
 *~
 .tox/
 .idea/
-pep8_result.txt
 smartme.*
 monasca*
 led.*
@@ -12,6 +11,7 @@ settings.json
 setup.cfg.BKP
 setup.py.BKP
 iotronic_lightningrod.egg-info
+pep8_results.txt
 build
 AUTHORS
 Authors

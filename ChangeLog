@@ -1,6 +1,16 @@
 CHANGES
 =======
 
+* Updated README. TOX PASSED
+* Addedd Raspberry Pi 3 installation guide. Arduino YUN installation guide updated
+* Updated installation  guides
+* Arduino YUN installation guide added
+* Update README.rst
+* Updated Plugins. Introduced installation guide
+* Plugin manager and APIs updated
+* Update AUTHORS
+* Bux fixed in conf template files. PluginApis updated. Main updated
+* Update plugins.example.json
 * Iotronic Home set
 * AUTHORS file fixed
 * Update in Lightning-rod main
@@ -41,14 +51,14 @@ CHANGES
 * PluginManager updated: PluginInject and PluginStart RPC added
 * Server device support added
 * Device and Gpio modules/classes added; development of Arduino Yun templates started
-* lightningrod python module renamed to iotronic_lightningrod;
+* lightningrod python module renamed to iotronic\_lightningrod;
 * tox-pep8 tests: passed
 * tox-pep8 tests: passed
 * plugin-manager updated
-* test_plugin RPC updated
+* test\_plugin RPC updated
 * Delete .directory
 * gitignore updated
-* first version of Plugin Manager Module (with the test plugin plugin_ZERO)
+* first version of Plugin Manager Module (with the test plugin plugin\_ZERO)
 * modules management added
 * Update README.md
 * Iotronic Lightning-rod first commit

@@ -40,3 +40,7 @@ class Module(object):
     @abc.abstractmethod
     def finalize(self):
         pass
+
+    @abc.abstractmethod
+    def restore(self):
+        pass

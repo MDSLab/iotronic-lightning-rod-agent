@@ -26,9 +26,9 @@ import time
 
 
 from iotronic_lightningrod.modules import Module
+from iotronic_lightningrod.modules import utils
 from iotronic_lightningrod.plugins import PluginSerializer
 import iotronic_lightningrod.wampmessage as WM
-from iotronic_lightningrod.modules import utils
 
 
 from oslo_config import cfg
@@ -143,7 +143,6 @@ class PluginManager(Module.Module):
 
                 plugins_conf = self._loadPluginsConf()
                 plugin_name = plugins_conf['plugins'][plugin_uuid]['name']
-                # plugin_status = plugins_conf['plugins'][plugin_uuid]['status']
 
                 try:
 
@@ -158,9 +157,10 @@ class PluginManager(Module.Module):
 
                         LOG.info(" - Rebooting plugin " + plugin_uuid)
 
-                        plugin_home = CONF.lightningrod_home + "/plugins/" \
-                                      + plugin_uuid
-                        plugin_filename = plugin_home + "/" + plugin_uuid + ".py"
+                        plugin_home = \
+                            CONF.lightningrod_home + "/plugins/" + plugin_uuid
+                        plugin_filename = \
+                            plugin_home + "/" + plugin_uuid + ".py"
                         plugin_params_file = \
                             plugin_home + "/" + plugin_uuid + ".json"
 
@@ -186,8 +186,8 @@ class PluginManager(Module.Module):
                                 worker.start()
 
                             else:
-                                message = "ERROR " \
-                                          + plugin_params_file + " does not exist!"
+                                message = "ERROR " + plugin_params_file \
+                                          + " does not exist!"
 
                                 LOG.error("   - "
                                           + worker.complete(f_name, message))

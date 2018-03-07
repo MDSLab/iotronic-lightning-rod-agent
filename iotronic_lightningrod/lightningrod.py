@@ -117,8 +117,10 @@ def moduleWampRegister(session, meth_list):
     else:
 
         for meth in meth_list:
-            # We don't considere the "__init__", "finalize" and "restore" methods
-            if (meth[0] != "__init__") & (meth[0] != "finalize") & (meth[0] != "restore"):
+            # We don't considere the "__init__", "finalize" and
+            # "restore" methods
+            if (meth[0] != "__init__") & (meth[0] != "finalize") \
+                    & (meth[0] != "restore"):
                 rpc_addr = u'iotronic.' + board.uuid + '.' + meth[0]
 
                 if not meth[0].startswith('_'):

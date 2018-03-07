@@ -70,9 +70,8 @@ class ServiceManager(Module.Module):
                     for wp in wstun_process_list:
 
                         if service_pid == wp.pid:
-                            LOG.warning(" --> the tunnel for '" + service_name
-                                     + "' already exists; killing...")
-                            #LOG.debug(wp.cmdline)
+                            LOG.info(" --> the tunnel for '" + service_name +
+                                     "' already exists; killing...")
 
                             # 1. Kill wstun process (if exists)
                             try:
@@ -148,14 +147,15 @@ class ServiceManager(Module.Module):
                         if service_pid == wp.pid:
                             LOG.warning(" --> the tunnel for '" + service_name
                                         + "' is still established.")
-                            # LOG.debug(wp.cmdline)
                             s_alive = True
                             break
 
                 if not s_alive:
                     # Create the reverse tunnel again
-                    public_port = services_conf['services'][service_uuid]['public_port']
-                    local_port = services_conf['services'][service_uuid]['local_port']
+                    public_port = services_conf['services'][service_uuid]
+                    ['public_port']
+                    local_port = services_conf['services'][service_uuid]
+                    ['local_port']
 
                     wstun = self._startWstun(public_port, local_port)
 
@@ -177,7 +177,6 @@ class ServiceManager(Module.Module):
                         message = "Error spawning " + str(service_name) \
                                   + " service tunnel!"
                         LOG.error(" - " + message)
-
 
         else:
             LOG.info(" --> No service tunnels to restore.")
@@ -279,9 +278,9 @@ class ServiceManager(Module.Module):
                         datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')
                     LOG.info(" - services.json file updated!")
 
-
                 # Apply the changes to services.json
-                self._updateServiceConf(services_conf, service_uuid, output=True)
+                self._updateServiceConf(services_conf, service_uuid,
+                                        output=True)
 
                 message = "Cloud service '" + str(service_name) \
                           + "' exposed on port " \
@@ -296,7 +295,6 @@ class ServiceManager(Module.Module):
                           + " service tunnel!"
                 LOG.error(" - " + message)
                 w_msg = WM.WampError(message)
-
 
         except Exception as err:
             message = "Error exposing " + str(service_name) \
@@ -363,8 +361,8 @@ class ServiceManager(Module.Module):
                         w_msg = WM.WampError(message)
 
             else:
-                message = rpc_name + " result:  " \
-                          + service_uuid + " already removed!"
+                message = rpc_name + " result:  " + service_uuid \
+                    + " already removed!"
                 LOG.error(" - " + message)
                 w_msg = WM.WampError(message)
 
@@ -414,7 +412,7 @@ class ServiceManager(Module.Module):
                 if wstun != None:
                     service_pid = wstun.pid
 
-                    #UPDATE services.json file
+                    # UPDATE services.json file
                     services_conf['services'][service_uuid]['pid'] = \
                         service_pid
                     services_conf['services'][service_uuid]['updated_at'] = \
@@ -481,9 +479,4 @@ class ServiceManager(Module.Module):
                 LOG.error(" - " + message)
                 w_msg = WM.WampError(message)
 
-
         return w_msg.serialize()
-
-
-
-

@@ -29,8 +29,6 @@ from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
 
-
-
 class DeviceManager(Module.Module):
 
     def __init__(self, board, session):

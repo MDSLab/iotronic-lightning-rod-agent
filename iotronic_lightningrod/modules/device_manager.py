@@ -13,35 +13,27 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import imp
+__author__ = "Nicola Peditto <n.peditto@gmail.com>"
+
+import importlib as imp
 import inspect
 import os
-from twisted.internet.defer import inlineCallbacks
+import subprocess
+import sys
+import threading
+import time
+
+from datetime import datetime
 
 from iotronic_lightningrod.config import package_path
 from iotronic_lightningrod.lightningrod import RPC_devices
 from iotronic_lightningrod.lightningrod import SESSION
 from iotronic_lightningrod.modules import Module
+from iotronic_lightningrod.modules import utils
 
 
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
-
-
-def deviceWampRegister(dev_meth_list, board):
-
-    LOG.info(" - " + str(board.type).capitalize()
-             + " device registering RPCs:")
-
-    for meth in dev_meth_list:
-
-        if (meth[0] != "__init__") & (meth[0] != "finalize"):
-            # LOG.info(" - " + str(meth[0]))
-            rpc_addr = u'iotronic.' + board.uuid + '.' + meth[0]
-            # LOG.debug(" --> " + str(rpc_addr))
-            SESSION.register(inlineCallbacks(meth[1]), rpc_addr)
-
-            LOG.info("   --> " + str(meth[0]) + " registered!")
 
 
 class DeviceManager(Module.Module):
@@ -51,15 +43,19 @@ class DeviceManager(Module.Module):
         # Module declaration
         super(DeviceManager, self).__init__("DeviceManager", board)
 
+        self.device_session = session
+
         device_type = board.type
 
         path = package_path + "/devices/" + device_type + ".py"
 
         if os.path.exists(path):
 
-            device_module = imp.load_source("device", path)
+            device_module = imp.import_module(
+                "iotronic_lightningrod.devices." + device_type
+            )
 
-            LOG.info(" - Device " + device_type + " module imported!")
+            LOG.info(" - Device '" + device_type + "' module imported!")
 
             device = device_module.System()
 
@@ -70,12 +66,80 @@ class DeviceManager(Module.Module):
 
             RPC_devices[device_type] = dev_meth_list
 
-            deviceWampRegister(dev_meth_list, board)
+            self._deviceWampRegister(dev_meth_list, board)
 
             board.device = device
 
         else:
-            LOG.warning("Device " + device_type + " not supported!")
+            LOG.warning("Device '" + device_type + "' not supported!")
 
     def finalize(self):
         pass
+
+    def restore(self):
+        pass
+
+    def _deviceWampRegister(self, dev_meth_list, board):
+
+        LOG.info(" - " + str(board.type).capitalize()
+                 + " device registering RPCs:")
+
+        for meth in dev_meth_list:
+
+            if (meth[0] != "__init__") & (meth[0] != "finalize"):
+                # LOG.info(" - " + str(meth[0]))
+                # rpc_addr = u'iotronic.' + board.uuid + '.' + meth[0]
+                rpc_addr = u'iotronic.' + str(board.session_id) + '.' + \
+                           board.uuid + '.' + meth[0]
+
+                # LOG.debug(" --> " + str(rpc_addr))
+                SESSION.register(meth[1], rpc_addr)
+
+                LOG.info("   --> " + str(meth[0]) + " registered!")
+
+    async def DevicePing(self):
+        rpc_name = utils.getFuncName()
+        LOG.info("RPC " + rpc_name + " CALLED")
+        return datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')
+
+    async def DeviceReboot(self):
+        rpc_name = utils.getFuncName()
+        LOG.info("RPC " + rpc_name + " CALLED")
+
+        command = "reboot"
+        subprocess.call(command, shell=True)
+
+        return datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')
+
+    async def DeviceHostname(self):
+        rpc_name = utils.getFuncName()
+        LOG.info("RPC " + rpc_name + " CALLED")
+
+        command = "hostname"
+        # subprocess.call(command, shell=True)
+
+        out = subprocess.Popen(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE
+        )
+
+        output = out.communicate()[0].decode('utf-8').strip()
+        print(output)
+
+        return str(output) + "@" + \
+            str(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f'))
+
+    async def DeviceRestartLR(self):
+        rpc_name = utils.getFuncName()
+        LOG.info("RPC " + rpc_name + " CALLED")
+
+        def delayLRrestarting():
+            time.sleep(5)
+            python = sys.executable
+            os.execl(python, python, *sys.argv)
+
+        threading.Thread(target=delayLRrestarting).start()
+
+        return "Restarting LR in 5 seconds (" + \
+               datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f') + ")..."

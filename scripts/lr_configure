@@ -1,4 +1,6 @@
-# Copyright 2011 OpenStack Foundation
+#!/usr/bin/python3
+
+# Copyright 2017 MDSLAB - University of Messina
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -13,23 +15,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-__author__ = "Nicola Peditto <n.peditto@gmail.com>"
+import os
+import sys
 
-import abc
-import six
-
-from oslo_log import log as logging
-LOG = logging.getLogger(__name__)
-
-
-@six.add_metaclass(abc.ABCMeta)
-class Device(object):
-    """Base class for each s4t Lightning-rod device.
-
-    """
-
-    def __init__(self, device_type):
-        self.device_type = device_type
-
-    def finalize(self):
-        pass
+if len(sys.argv) < 3:
+    print('Arguments required: <REGISTRATION-TOKEN> <WAMP-REG-AGENT-URL>',
+          str(sys.argv))
+else:
+    os.system('sed -i "s|\\"code\\":.*|\\"code\\": \\"'
+              + sys.argv[1] + '\\"|g" /etc/iotronic/settings.json')
+    os.system('sed -i "s|\\"url\\":.*|\\"url\\": \\"'
+              + sys.argv[2] + '\\",|g" /etc/iotronic/settings.json')
+    os.system('sed -i "s|<IOTRONIC-REALM>|s4t|g" /etc/iotronic/settings.json')

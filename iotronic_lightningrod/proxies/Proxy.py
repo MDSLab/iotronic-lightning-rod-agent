@@ -1,5 +1,5 @@
-# Copyright 2017 MDSLAB - University of Messina
-#    All Rights Reserved.
+# Copyright 2011 OpenStack Foundation
+# All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -13,24 +13,23 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from iotronic_lightningrod.plugins import Plugin
-from iotronic_lightningrod.plugins import pluginApis as API
+__author__ = "Nicola Peditto <n.peditto@gmail.com>"
+
+import abc
+import six
 
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
-# User imports
-import time
 
+@six.add_metaclass(abc.ABCMeta)
+class Proxy(object):
+    """Base class for proxies supported by Iotornic.
 
-class Worker(Plugin.Plugin):
-    def __init__(self, uuid, name, q_result=None, params=None):
-        super(Worker, self).__init__(uuid, name, q_result, params)
+    """
 
-    def run(self):
-        LOG.info("Plugin " + self.name + " starting...")
-        LOG.info(self.params)
+    def __init__(self, proxy_type):
+        self.type = proxy_type
 
-        while(self._is_running):
-            LOG.info(self.params['message'])
-            time.sleep(1)
+    def finalize(self):
+        pass

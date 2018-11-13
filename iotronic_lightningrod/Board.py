@@ -13,17 +13,19 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+__author__ = "Nicola Peditto <n.peditto@gmail.com>"
+
 from datetime import datetime
-# from dateutil.tz import tzlocal
 import json
 import os
 
-from iotronic_lightningrod.config import iotronic_home
-
+from oslo_config import cfg
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
-SETTINGS = iotronic_home + '/settings.json'
+CONF = cfg.CONF
+
+SETTINGS = '/etc/iotronic/settings.json'
 
 
 class Board(object):
@@ -41,10 +43,12 @@ class Board(object):
         self.mobile = None
         self.session = None
         self.session_id = None
+        self.agent_url = None
 
         self.location = {}
 
         self.device = None
+        self.proxy = None
 
         self.wamp_config = None
         self.extra = {}
@@ -136,6 +140,7 @@ class Board(object):
                 )
                 os._exit(1)
 
+        # self.agent_url = str(self.wamp_config['url'])
         LOG.info(' - agent: ' + str(self.agent))
         LOG.info(' - url: ' + str(self.wamp_config['url']))
         LOG.info(' - realm: ' + str(self.wamp_config['realm']))

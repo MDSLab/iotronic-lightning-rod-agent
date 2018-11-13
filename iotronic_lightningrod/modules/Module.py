@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-__author__ = "MDSLAB Team"
+__author__ = "Nicola Peditto <n.peditto@gmail.com>"
 
 import abc
 import six
@@ -28,8 +28,6 @@ class Module(object):
 
     """
 
-    # __metaclass__ = abc.ABCMeta
-
     def __init__(self, name, board):
 
         self.name = name
@@ -39,4 +37,8 @@ class Module(object):
 
     @abc.abstractmethod
     def finalize(self):
+        pass
+
+    @abc.abstractmethod
+    def restore(self):
         pass

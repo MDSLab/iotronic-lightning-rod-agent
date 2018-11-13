@@ -1,55 +1,22 @@
 CHANGES
 =======
 
+* Added support for SSL connections: Wamp and Service Manager updated
+* Adding network\_manager
+
+0.2.0
+-----
+
+* Installation procedures fixed
+* Updated Module class: restore method was added and all modules was upgraded. Service Manager upgraded: services restore management added
+* Added Cloud Service Manager
+* Moved to Python 3.5
+* Plugin Manager updated. Added installation guides
+* Bux fixed in conf template files
+* Bug fixed in conf files templates. Update plugin APIs
+* Some updates
 * Iotronic Home set
-* AUTHORS file fixed
-* Update in Lightning-rod main
-* python deployment updated
-* python deployment updated
-* python deployment updated
-* TOX checks PASSED
-* Plugin Manager updated. Device modules updated. Reconnection management improved
-* WAMP Re-Connection failure management updated
-* Plugin Manager updated. systemctl script updated
-* Plugin Manager updated. Checks for YUN gpio management added
-* Added init.d and systemctl scripts. Some updates in Plugin Manager
-* Added exceptions management: at the moment TimeoutError only. Added plugin APIs. Plugin Manager updated
-* Updated Plugin Manager. Added TimeoutError exception: to improve and move in a specific library
-* Updated Plugin Class and added location to the Board class. Arduino YUN Gpio Manager updated: I2C support added
-* Updated Plugin Manager
-* Updated Plugin Manager
-* Updated Plugin Manager; updated reconnection procedures
-* Updated name 'node' to 'board'
-* Cleaning
-* Registration-Authentication procedures updated. Credits updated
-* Developed new plugin management methods: stop, remove. VFS Manager under costruction. PluginSerializer: removede oslo.messagging serialization methods. Registration management updated
-* Registration management updated: multiple wamp server management; Updated YUN gpio management; Updated PluginManager methods; Updated VFS library for remote access
-* Registration management updated: multiple wamp agents added
-* Registration management updated; new RPCs methods to manage Iotronic nodes: inject configuration, destroy node
-* cleaning egg info
-* Registration management first approach completed
-* fixed uuid configuration checks
-* cleaning egg info
-* fixed uuid configuration checks
-* fixed uuid configuration checks
-* fixed uuid configuration checks
-* fixed configuration checks
-* fixed configuration checks
-* fixed configuration checks
-* Added VFS module; added configuration checks; modules reviewed
-* Configuration system updated (settings.json file used for dynamic configuration changes); Registration system updated; Introduced Node class
-* PluginManager updated: PluginInject and PluginStart RPC added
-* Server device support added
-* Device and Gpio modules/classes added; development of Arduino Yun templates started
-* lightningrod python module renamed to iotronic_lightningrod;
-* tox-pep8 tests: passed
-* tox-pep8 tests: passed
-* plugin-manager updated
-* test_plugin RPC updated
-* Delete .directory
-* gitignore updated
-* first version of Plugin Manager Module (with the test plugin plugin_ZERO)
-* modules management added
-* Update README.md
-* Iotronic Lightning-rod first commit
-* Initial commit
+* Updated main and Board class
+* Registration bug fixed
+* First commit
+* Added .gitreview

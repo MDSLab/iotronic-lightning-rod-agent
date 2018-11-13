@@ -1,5 +1,5 @@
-# Copyright 2011 OpenStack Foundation
-# All Rights Reserved.
+# Copyright 2017 MDSLAB - University of Messina
+#    All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -13,23 +13,24 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-__author__ = "Nicola Peditto <n.peditto@gmail.com>"
-
-import abc
-import six
+from iotronic_lightningrod.modules.plugins import Plugin
+# from iotronic_lightningrod.modules.plugins import pluginApis as API
 
 from oslo_log import log as logging
 LOG = logging.getLogger(__name__)
 
+# User imports
+import time
 
-@six.add_metaclass(abc.ABCMeta)
-class Device(object):
-    """Base class for each s4t Lightning-rod device.
 
-    """
+class Worker(Plugin.Plugin):
+    def __init__(self, uuid, name, q_result=None, params=None):
+        super(Worker, self).__init__(uuid, name, q_result, params)
 
-    def __init__(self, device_type):
-        self.device_type = device_type
+    def run(self):
+        LOG.info("Plugin " + self.name + " starting...")
+        LOG.info(self.params)
 
-    def finalize(self):
-        pass
+        while(self._is_running):
+            LOG.info(self.params['message'])
+            time.sleep(1)
